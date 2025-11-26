@@ -1,39 +1,46 @@
-// engine/GeniusEngine.js
+import express from "express";
+import GeniusEngine from "../engine/GeniusEngine.js";
 
-const GeniusEngine = {
-  version: "1.0.0",
+const router = express.Router();
 
-  runTest() {
-    return {
-      message: "Genius Engine operational",
-      confidence: 0.99,
-      version: this.version,
-    };
-  },
+/**
+ * Test endpoint
+ */
+router.get("/genius", (req, res) => {
+  const result = {
+    message: "Genius Engine operational",
+    confidence: 0.99,
+    version: "1.0.0",
+  };
 
-  fullAnalysis(match) {
-    return {
-      matchId: match.matchId || null,
-      league: match.league || "Unknown League",
-      homeTeam: match.homeTeam,
-      awayTeam: match.awayTeam,
-      kickoffTime: match.kickoffTime,
+  res.json({
+    success: true,
+    engine: "Genius Engine",
+    result,
+  });
+});
 
-      geniusScore: Number((Math.random() * 1).toFixed(2)),
+/**
+ * Main Genius Engine analysis endpoint
+ */
+router.post("/genius/analyze", async (req, res) => {
+  try {
+    const input = req.body;
 
-      stats: {
-        attackPower: Math.random().toFixed(2),
-        defensePower: Math.random().toFixed(2),
-        momentum: Math.random().toFixed(2),
-      },
+    const output = GeniusEngine.analyze(input);
 
-      markets: {
-        over25GoalsOdds: 1.75,
-        bttsYesOdds: 1.80,
-        oddsShift: 0.15,
-      },
-    };
+    res.json({
+      success: true,
+      engine: "Genius Engine",
+      result: output,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Genius Engine error",
+      details: error.message,
+    });
   }
-};
+});
 
-export default GeniusEngine;
+export default router;
