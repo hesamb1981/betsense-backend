@@ -3,42 +3,52 @@ import GeniusEngine from "./engine/GeniusEngine.js";
 
 const router = express.Router();
 
-// Root test
+// تست روت اصلی API
 router.get("/", (req, res) => {
   res.json({
     status: "API root working",
-    success: true
+    success: true,
   });
 });
 
-// GENIUS ENGINE – GET test
+// تست سلامت Genius Engine (GET /api/genius)
 router.get("/genius", (req, res) => {
-  const result = GeniusEngine.sampleAnalysis();
+  const health = GeniusEngine.health();
   res.json({
     success: true,
     engine: "Genius Engine",
-    result
+    result: health,
   });
 });
 
-// GENIUS ENGINE – POST full analysis
-router.post("/genius", async (req, res) => {
+// تحلیل اصلی Genius Engine (POST /api/genius/analyze)
+router.post("/genius/analyze", (req, res) => {
   try {
-    const matchData = req.body;
-    const result = await GeniusEngine.fullAnalysis(matchData);
+    const payload = req.body || {};
+    const result = GeniusEngine.analyzeMatch(payload);
 
     res.json({
       success: true,
       engine: "Genius Engine",
-      result
+      result,
     });
+  } catch (error) {
+    console.error("Genius Engine analyze error:", error);
 
-  } catch (e) {
-    res.status(500).json({
+    res.status(400).json({
       success: false,
-      error: e.message
+      engine: "Genius Engine",
+      error: error.message || "GENIUS_ANALYZE_ERROR",
     });
   }
+});
+
+// روت قدیمی fusion برای آینده – الان فقط تست
+router.post("/fusion", (req, res) => {
+  res.json({
+    success: true,
+    message: "Fusion endpoint test OK",
+  });
 });
 
 export default router;
