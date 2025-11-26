@@ -1,46 +1,32 @@
-import express from "express";
-import GeniusEngine from "../engine/GeniusEngine.js";
+const GeniusEngine = {
+  run() {
+    return {
+      message: "Genius Engine operational",
+      confidence: 0.99,
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
 
-const router = express.Router();
+      // Sample match intelligence output
+      matchId: 12345,
+      league: "Premier League",
+      homeTeam: "Arsenal",
+      awayTeam: "Liverpool",
+      kickoffTime: "2025-02-10 19:45",
 
-/**
- * Test endpoint
- */
-router.get("/genius", (req, res) => {
-  const result = {
-    message: "Genius Engine operational",
-    confidence: 0.99,
-    version: "1.0.0",
-  };
+      geniusScore: 0.56,
+      probability: {
+        homeWin: 0.42,
+        draw: 0.28,
+        awayWin: 0.30,
+      },
 
-  res.json({
-    success: true,
-    engine: "Genius Engine",
-    result,
-  });
-});
+      markets: {
+        over25GoalsOdds: 1.75,
+        bttsYesOdds: 1.8,
+        oddsShift: 0.15,
+      },
+    };
+  },
+};
 
-/**
- * Main Genius Engine analysis endpoint
- */
-router.post("/genius/analyze", async (req, res) => {
-  try {
-    const input = req.body;
-
-    const output = GeniusEngine.analyze(input);
-
-    res.json({
-      success: true,
-      engine: "Genius Engine",
-      result: output,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "Genius Engine error",
-      details: error.message,
-    });
-  }
-});
-
-export default router;
+export default GeniusEngine;
