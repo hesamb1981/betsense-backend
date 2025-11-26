@@ -42,5 +42,5 @@ router.post("/analyze", (req, res) => {
     });
   }
 });
-qq
+
 export default router;
