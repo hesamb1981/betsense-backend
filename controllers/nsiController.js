@@ -1,12 +1,13 @@
 // controllers/nsiController.js
+// NSI Engine controller – shared for GET/POST /api/nsi/analyze
 
-// Helper to turn any value into a safe number
+// Helper: safe number
 const toNumber = (value, fallback = 0) => {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 };
 
-// Simple clamp helper
+// Helper: clamp 0–1
 const clamp01 = (value) => {
   if (value < 0) return 0;
   if (value > 1) return 1;
@@ -14,145 +15,140 @@ const clamp01 = (value) => {
 };
 
 // -----------------------------
-// Health + diagnostics
+// Health endpoint
 // -----------------------------
-
-export const getBasicHealth = (req, res) => {
+export const nsiHealth = (req, res) => {
   res.json({
     ok: true,
-    layer: "NSI",
-    status: "healthy",
-    mode: "basic",
+    engine: "NSIEngine",
+    status: "online",
     ts: new Date().toISOString(),
   });
 };
 
-export const getDeepHealth = (req, res) => {
-  res.json({
-    ok: true,
-    layer: "NSI",
-    status: "healthy",
-    mode: "deep",
-    checks: {
-      engineLoaded: true,
-      config: "demo",
-      latencyMs: 5,
-    },
-    ts: new Date().toISOString(),
-  });
-};
-
-export const getSampleSnapshot = (req, res) => {
-  res.json({
-    ok: true,
-    sample: {
-      fixtureId: "123456",
-      team: "Arsenal",
-      opponent: "Spurs",
-      minute: 78,
-      scoreDiff: 1, // team is leading by 1
-      mustWin: true,
-      knockout: false,
-      derby: true,
-      emotionIndex: 72,
-      xgMomentum: 65,
-      pressureIndex: 58,
-      behaviorDeviation: 18,
-      lastGoalMinutes: 4,
-      lastCardMinutes: 11,
-      lastVarMinutes: 27,
-    },
-  });
-};
-
-export const getSignatureExample = (req, res) => {
-  res.json({
-    ok: true,
-    signature: {
-      nsiScore: 81,
-      stateBand: "CLUTCH",
-      collapseRisk: 0.19,
-      flags: ["must_win", "derby_heat", "recent_goal"],
-    },
-  });
-};
-
 // -----------------------------
-// Main analysis endpoint
+// Main NSI analyzer (GET + POST)
 // -----------------------------
-
-export const analyzeNSI = (req, res) => {
+export const nsiAnalyze = (req, res) => {
   try {
-    const {
-      fixtureId,
-      teamName,
-      opponentName,
-      minute,
-      scoreDiff,
-      venue,
-      mustWin,
-      knockout,
-      derby,
-      emotionIndex,
-      xgMomentum,
-      pressureIndex,
-      behaviorDeviation,
-      lastGoalMinutes,
-      lastCardMinutes,
-      lastVarMinutes,
-    } = req.body || {};
+    // Support both GET (query) and POST (body)
+    const src = req.method === "GET" ? req.query : (req.body || {});
 
-    // Core numeric signals
-    const emotion = toNumber(emotionIndex, 50);
-    const xg = toNumber(xgMomentum, 50);
-    const pressure = toNumber(pressureIndex, 50);
-    const behavior = toNumber(behaviorDeviation, 0);
+    const fixtureId =
+      src.fixtureId || src.fixture_id || src.fixture || null;
 
-    // Simple base score from stack signals (0–100)
-    const baseScore = (emotion + xg + pressure) / 3;
+    const team =
+      src.team ||
+      src.teamName ||
+      src.home_team ||
+      src.homeTeam ||
+      null;
 
-    // High-stakes boosts
+    const opponent =
+      src.opponent ||
+      src.opponentName ||
+      src.away_team ||
+      src.awayTeam ||
+      null;
+
+    const minute = toNumber(src.minute, 0);
+    const scoreDiff = toNumber(src.scoreDiff, 0);
+    const venue = (src.venue || "").toString().toUpperCase() || "UNKNOWN";
+
+    // Flags – accept boolean or "true"/"1"
+    const mustWin =
+      src.mustWin === true ||
+      src.mustWin === "true" ||
+      src.mustWin === "1";
+
+    const knockout =
+      src.knockout === true ||
+      src.knockout === "true" ||
+      src.knockout === "1";
+
+    const derby =
+      src.derby === true ||
+      src.derby === "true" ||
+      src.derby === "1";
+
+    // Signals – can come flat or nested (stackSignals.*)
+    const signals = src.stackSignals || src.signals || src || {};
+
+    const emotionIndex = toNumber(
+      signals.emotionIndex ?? src.emotionIndex,
+      50
+    );
+    const xgMomentum = toNumber(
+      signals.xgMomentum ?? src.xgMomentum,
+      50
+    );
+    const pressureIndex = toNumber(
+      signals.pressureIndex ?? src.pressureIndex,
+      50
+    );
+    const behaviorDeviation = toNumber(
+      signals.behaviorDeviation ?? src.behaviorDeviation,
+      0
+    );
+
+    // Shocks – can come flat or nested (shocks.* or triggers.*)
+    const shocks = src.shocks || src.triggers || src || {};
+    const lastGoalMinutes = toNumber(
+      shocks.lastGoalMinutes ??
+        shocks.lastGoalMinutesAgo ??
+        src.lastGoalMinutes ??
+        src.lastGoalMinutesAgo,
+      30
+    );
+    const lastCardMinutes = toNumber(
+      shocks.lastCardMinutes ??
+        shocks.lastCardMinutesAgo ??
+        src.lastCardMinutes ??
+        src.lastCardMinutesAgo,
+      45
+    );
+    const lastVarMinutes = toNumber(
+      shocks.lastVarMinutes ??
+        shocks.lastVarMinutesAgo ??
+        src.lastVarMinutes ??
+        src.lastVarMinutesAgo,
+      60
+    );
+
+    // -------------------------
+    // Core NSI scoring logic
+    // -------------------------
+    const baseScore =
+      (emotionIndex + xgMomentum + pressureIndex) / 3; // 0–100
+
     const mustWinBoost = mustWin ? 10 : 0;
     const knockoutBoost = knockout ? 12 : 0;
     const derbyBoost = derby ? 8 : 0;
 
-    // Behavior deviation: higher deviation = higher instability
-    const behaviorWeight = clamp01(behavior / 40); // 0–1
+    const behaviorWeight = clamp01(behaviorDeviation / 40); // 0–1
     const behaviorBoost = behaviorWeight * 15; // up to +15
 
-    // Shock triggers: recent goal/card/VAR increase instability
-    const lastGoal = toNumber(lastGoalMinutes, 30);
-    const lastCard = toNumber(lastCardMinutes, 45);
-    const lastVar = toNumber(lastVarMinutes, 60);
+    const goalShock = clamp01((20 - lastGoalMinutes) / 20);
+    const cardShock = clamp01((25 - lastCardMinutes) / 25);
+    const varShock = clamp01((30 - lastVarMinutes) / 30);
 
-    const goalShock = clamp01((20 - lastGoal) / 20); // if goal in last 0–5 mins, close to 1
-    const cardShock = clamp01((25 - lastCard) / 25);
-    const varShock = clamp01((30 - lastVar) / 30);
+    const shockBoost =
+      goalShock * 10 + cardShock * 6 + varShock * 6;
 
-    const shockBoost = (goalShock * 10) + (cardShock * 6) + (varShock * 6);
-
-    // Score context: chasing vs leading
-    const diff = toNumber(scoreDiff, 0);
     let scoreStress = 0;
-    if (diff < 0) {
-      // losing
-      scoreStress = Math.min(Math.abs(diff) * 6, 18); // up to +18
-    } else if (diff > 0) {
-      // leading: small protective effect
-      scoreStress = -Math.min(diff * 3, 9); // up to -9
+    if (scoreDiff < 0) {
+      scoreStress = Math.min(Math.abs(scoreDiff) * 6, 18); // losing
+    } else if (scoreDiff > 0) {
+      scoreStress = -Math.min(scoreDiff * 3, 9); // leading
     }
 
-    // Minute context (late game higher pressure)
-    const m = toNumber(minute, 45);
-    const minuteFactor = clamp01((m - 60) / 30); // 60–90 -> 0–1
+    const minuteFactor = clamp01((minute - 60) / 30); // 60–90 -> 0–1
     const lateGameBoost = minuteFactor * 12;
 
-    // Venue: away slightly more volatile in this demo
     let venueAdjust = 0;
-    if (venue === "away") venueAdjust = 5;
-    if (venue === "neutral") venueAdjust = 2;
+    if (venue === "AWAY") venueAdjust = 5;
+    if (venue === "NEUTRAL") venueAdjust = 2;
 
-    // Final NSI score
     let nsiScore =
       baseScore +
       mustWinBoost +
@@ -164,17 +160,15 @@ export const analyzeNSI = (req, res) => {
       lateGameBoost +
       venueAdjust;
 
-    // Clamp 0–100
     if (nsiScore < 0) nsiScore = 0;
     if (nsiScore > 100) nsiScore = 100;
 
-    // Simple banding
     let stateBand = "STABLE";
     if (nsiScore >= 80) stateBand = "CLUTCH";
     else if (nsiScore >= 60) stateBand = "TENSE";
     else if (nsiScore <= 35) stateBand = "FRAGILE";
 
-    const collapseRisk = clamp01((100 - nsiScore) / 120); // 0–1 style value
+    const collapseRisk = clamp01((100 - nsiScore) / 120);
 
     const flags = [];
     if (mustWin) flags.push("must_win");
@@ -186,15 +180,26 @@ export const analyzeNSI = (req, res) => {
     if (behaviorWeight > 0.6) flags.push("behavior_deviation_spike");
     if (minuteFactor > 0.6) flags.push("late_game_pressure");
 
-    res.json({
+    return res.json({
       ok: true,
+      engine: "NSIEngine",
       input: {
-        fixtureId: fixtureId || null,
-        teamName: teamName || null,
-        opponentName: opponentName || null,
-        minute: toNumber(minute, 0),
-        scoreDiff: diff,
-        venue: venue || "unknown",
+        fixtureId,
+        team,
+        opponent,
+        minute,
+        scoreDiff,
+        venue,
+        mustWin,
+        knockout,
+        derby,
+        emotionIndex,
+        xgMomentum,
+        pressureIndex,
+        behaviorDeviation,
+        lastGoalMinutes,
+        lastCardMinutes,
+        lastVarMinutes,
       },
       nsi: {
         nsiScore: Math.round(nsiScore),
@@ -202,24 +207,14 @@ export const analyzeNSI = (req, res) => {
         collapseRisk: Number(collapseRisk.toFixed(2)),
         flags,
       },
-      debug: {
-        baseScore: Number(baseScore.toFixed(2)),
-        mustWinBoost,
-        knockoutBoost,
-        derbyBoost,
-        behaviorBoost: Number(behaviorBoost.toFixed(2)),
-        shockBoost: Number(shockBoost.toFixed(2)),
-        scoreStress,
-        lateGameBoost: Number(lateGameBoost.toFixed(2)),
-        venueAdjust,
-      },
     });
-  } catch (err) {
-    console.error("NSI analyze error:", err);
-    res.status(500).json({
+  } catch (error) {
+    console.error("NSI analyze error:", error);
+    return res.status(500).json({
       ok: false,
+      engine: "NSIEngine",
       error: "NSI_ENGINE_ERROR",
-      message: "Unexpected error inside NSI Engine demo.",
+      message: "Unexpected error inside NSI Engine.",
     });
   }
 };
