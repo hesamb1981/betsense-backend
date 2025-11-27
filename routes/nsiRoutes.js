@@ -1,15 +1,23 @@
 // routes/nsiRoutes.js
-// Routes for Neuro-Situational Identity Engine (NSI Engine) · v0.1
 
 import express from "express";
-import { nsiHealth, nsiAnalyze } from "../controllers/nsiController.js";
+import {
+  getBasicHealth,
+  getDeepHealth,
+  getSampleSnapshot,
+  getSignatureExample,
+  analyzeNSI,
+} from "../controllers/nsiController.js";
 
 const router = express.Router();
 
-// GET /api/nsi/health
-router.get("/health", nsiHealth);
+// Health + diagnostics
+router.get("/health-basic", getBasicHealth);
+router.get("/health-deep", getDeepHealth);
+router.get("/sample", getSampleSnapshot);
+router.get("/signature-example", getSignatureExample);
 
-// GET /api/nsi/analyze
-router.get("/analyze", nsiAnalyze);
+// Main analysis endpoint used by the NSI UI
+router.post("/analyze", analyzeNSI);
 
 export default router;
