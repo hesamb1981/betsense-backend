@@ -1,8 +1,8 @@
 // controllers/geniusController.js
 // Controller for Genius Engine endpoints.
-// فعلاً منطق اصلی به صورت placeholder است تا بعداً به GeniusEngine واقعی وصل شود.
 
 import { logRequest, sendSuccess, sendError } from "../utils/index.js";
+import { runGeniusEngine } from "../engine/GeniusEngine.js";
 
 // GET /api/genius/health
 export const geniusHealth = (req, res) => {
@@ -15,8 +15,7 @@ export const geniusHealth = (req, res) => {
 };
 
 // GET /api/genius/analyze
-// در نسخه‌ی بعدی این متد به GeniusEngine واقعی وصل می‌شود.
-// فعلاً ورودی‌ها را می‌گیرد و یک خروجی تستی برمی‌گرداند.
+// v0.1 – wires HTTP request into GeniusEngine core logic.
 export const geniusAnalyze = async (req, res) => {
   try {
     logRequest(req);
@@ -41,22 +40,13 @@ export const geniusAnalyze = async (req, res) => {
       },
     };
 
-    // 🔽 این قسمت فعلاً فقط یک خروجی نمایشی می‌دهد.
-    // در مرحله‌ی بعدی به GeniusEngine واقعی وصل می‌شود.
-    const mockResult = {
-      recommendation: "HOLD",
-      confidence: 0.5,
-      notes: [
-        "این پاسخ فقط برای تست API است.",
-        "در نسخه‌ی بعدی، خروجی از GeniusEngine واقعی محاسبه می‌شود.",
-      ],
-    };
+    const result = runGeniusEngine(input);
 
     return sendSuccess(res, {
       engine: "GeniusEngine",
-      mode: "mock",
+      mode: result.mode,
       input,
-      result: mockResult,
+      result,
     });
   } catch (error) {
     return sendError(res, error);
