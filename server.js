@@ -1,5 +1,5 @@
 // server.js
-// BetSense backend – Genius + Emotion + NSI Engines (v0.1)
+// BetSense backend – Genius + Emotion + NSI Engines (v0.2)
 
 import express from "express";
 import cors from "cors";
@@ -14,10 +14,7 @@ import {
   emotionAnalyze,
 } from "./controllers/emotionController.js";
 
-import {
-  nsiHealth,
-  nsiAnalyze,
-} from "./controllers/nsiController.js";
+import nsiRouter from "./routes/nsiRoutes.js";
 
 import { logRequest, sendSuccess, sendError } from "./utils/index.js";
 import { runGeniusEngine } from "./engine/GeniusEngine.js";
@@ -111,14 +108,10 @@ app.get("/api/emotion/health", emotionHealth);
 app.get("/api/emotion/analyze", emotionAnalyze);
 
 // -------------------------------------
-// NSI ENGINE
+// NSI ENGINE (router)
 // -------------------------------------
 
-// Health check (GET)
-app.get("/api/nsi/health", nsiHealth);
-
-// Analyze endpoint (GET with query params)
-app.get("/api/nsi/analyze", nsiAnalyze);
+app.use("/api/nsi", nsiRouter);
 
 // -------------------------------------
 // Fallback
