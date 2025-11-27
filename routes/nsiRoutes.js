@@ -1,23 +1,16 @@
 // routes/nsiRoutes.js
+// NSI Engine routes – supports GET + POST
 
 import express from "express";
-import {
-  getBasicHealth,
-  getDeepHealth,
-  getSampleSnapshot,
-  getSignatureExample,
-  analyzeNSI,
-} from "../controllers/nsiController.js";
+import { nsiHealth, nsiAnalyze } from "../controllers/nsiController.js";
 
 const router = express.Router();
 
-// Health + diagnostics
-router.get("/health-basic", getBasicHealth);
-router.get("/health-deep", getDeepHealth);
-router.get("/sample", getSampleSnapshot);
-router.get("/signature-example", getSignatureExample);
+// Health check
+router.get("/health", nsiHealth);
 
-// Main analysis endpoint used by the NSI UI
-router.post("/analyze", analyzeNSI);
+// Analyze endpoints
+router.get("/analyze", nsiAnalyze);   // for manual URL tests
+router.post("/analyze", nsiAnalyze);  // for NSI UI JSON
 
 export default router;
