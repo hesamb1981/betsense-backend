@@ -1,15 +1,18 @@
+// routes/geniusRoutes.js
+// Routes for Genius Engine API.
+
 import express from "express";
-import GeniusEngine from "../engine/GeniusEngine.js";
+import {
+  geniusHealth,
+  geniusAnalyze,
+} from "../controllers/geniusController.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  const output = GeniusEngine.run();
-  res.json({
-    success: true,
-    engine: "Genius Engine",
-    result: output,
-  });
-});
+// GET /api/genius/health
+router.get("/health", geniusHealth);
+
+// GET /api/genius/analyze
+router.get("/analyze", geniusAnalyze);
 
 export default router;
