@@ -1,18 +1,19 @@
 // controllers/nsiController.js
-// NSI Engine – health, analyze (manual), live (stack-connected)
+// NSI Engine + RBS (Real Behavioral Switching) – BetSense
 
+// ----------------- Helpers -----------------
 const toNumber = (value, fallback = 0) => {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 };
 
-const clamp01 = (value) => {
-  if (value < 0) return 0;
-  if (value > 1) return 1;
-  return value;
+const clamp01 = (v) => {
+  if (v < 0) return 0;
+  if (v > 1) return 1;
+  return v;
 };
 
-// این تابع هسته‌ی محاسبه‌ی NSI است – هم برای analyze معمولی، هم برای live استفاده می‌شود
+// ----------------- NSI Core -----------------
 const buildNsiSignature = (input) => {
   const {
     minute = 0,
@@ -110,9 +111,7 @@ const buildNsiSignature = (input) => {
   };
 };
 
-// -----------------------------
-// HEALTH
-// -----------------------------
+// ----------------- NSI Endpoints -----------------
 export const nsiHealth = (req, res) => {
   res.json({
     ok: true,
@@ -123,9 +122,6 @@ export const nsiHealth = (req, res) => {
   });
 };
 
-// -----------------------------
-// MANUAL ANALYZE  (قبلی که کار می‌کرد)
-// -----------------------------
 export const nsiAnalyze = (req, res) => {
   try {
     const src = req.method === "GET" ? req.query : (req.body || {});
@@ -259,9 +255,6 @@ export const nsiAnalyze = (req, res) => {
   }
 };
 
-// -----------------------------
-// LIVE ANALYZE (اتصال به موتورهای زنده - نسخه demo)
-// -----------------------------
 export const nsiLive = (req, res) => {
   try {
     const src = req.method === "GET" ? req.query : (req.body || {});
@@ -287,13 +280,11 @@ export const nsiLive = (req, res) => {
     const scoreDiff = toNumber(src.scoreDiff, 0);
     const venue = (src.venue || "HOME").toString().toUpperCase();
 
-    // 🔻 در آینده این ۴ تا از موتورهای واقعی Emotion / xG / Behavior خوانده می‌شود
     const emotionIndex = toNumber(src.emotionIndex, 72);
     const xgMomentum = toNumber(src.xgMomentum, 68);
     const pressureIndex = toNumber(src.pressureIndex, 63);
     const behaviorDeviation = toNumber(src.behaviorDeviation, 28);
 
-    // شاک‌ها هم در نسخه نهایی از لایه‌ی live shock recorder می‌آیند
     const lastGoalMinutes = toNumber(src.lastGoalMinutes, 4);
     const lastCardMinutes = toNumber(src.lastCardMinutes, 16);
     const lastVarMinutes = toNumber(src.lastVarMinutes, 25);
@@ -302,9 +293,18 @@ export const nsiLive = (req, res) => {
       minute,
       scoreDiff,
       venue,
-      mustWin: src.mustWin === "true" || src.mustWin === "1" || src.mustWin === true,
-      knockout: src.knockout === "true" || src.knockout === "1" || src.knockout === true,
-      derby: src.derby === "true" || src.derby === "1" || src.derby === true,
+      mustWin:
+        src.mustWin === "true" ||
+        src.mustWin === "1" ||
+        src.mustWin === true,
+      knockout:
+        src.knockout === "true" ||
+        src.knockout === "1" ||
+        src.knockout === true,
+      derby:
+        src.derby === "true" ||
+        src.derby === "1" ||
+        src.derby === true,
       emotionIndex,
       xgMomentum,
       pressureIndex,
@@ -342,6 +342,208 @@ export const nsiLive = (req, res) => {
       engine: "NSIEngine",
       error: "NSI_LIVE_ERROR",
       message: "Unexpected error inside NSI live endpoint.",
+    });
+  }
+};
+
+// ----------------- RBS Core (Real Behavioral Switching) -----------------
+
+const computeBehaviorTension = (point) => {
+  const emotion = toNumber(point.emotionIndex, 50);
+  const xg = toNumber(point.xgMomentum, 50);
+  const pressure = toNumber(point.pressureIndex, 50);
+  const deviation = toNumber(point.behaviorDeviation, 0);
+
+  const fieldTilt = toNumber(point.fieldTilt, 50);
+  const passAgg = toNumber(point.passAggression, 50);
+  const pressInt = toNumber(point.pressIntensity, 50);
+
+  const e = clamp01(emotion / 100);
+  const x = clamp01(xg / 100);
+  const p = clamp01(pressure / 100);
+  const d = clamp01(deviation / 100);
+
+  const ft = clamp01(fieldTilt / 100);
+  const pa = clamp01(passAgg / 100);
+  const pr = clamp01(pressInt / 100);
+
+  const base = (e + x + p) / 3;
+  const behaviour = d * 1.2;
+  const tactical = (ft + pa + pr) / 3;
+
+  const tension = base * 0.45 + behaviour * 0.35 + tactical * 0.2;
+  return clamp01(tension);
+};
+
+const computeSwitchForce = (prevTension, currTension) => {
+  const delta = currTension - prevTension;
+  return {
+    delta,
+    magnitude: Math.abs(delta),
+    direction: delta > 0 ? "up" : delta < 0 ? "down" : "flat",
+  };
+};
+
+const buildRBSSignature = (timelineRaw = [], options = {}) => {
+  const timeline = (timelineRaw || [])
+    .map((p) => ({
+      ...p,
+      minute: toNumber(p.minute, 0),
+    }))
+    .filter((p) => Number.isFinite(p.minute))
+    .sort((a, b) => a.minute - b.minute);
+
+  if (!timeline.length) {
+    return {
+      ok: false,
+      engine: "RBSEngine",
+      error: "EMPTY_TIMELINE",
+      message: "No timeline points provided to RBSEngine.",
+      summary: null,
+      switches: [],
+    };
+  }
+
+  const sensitivity = clamp01(options.sensitivity ?? 0.65);
+  const collapseBias = clamp01(options.collapseBias ?? 0.7);
+
+  const enriched = timeline.map((point) => {
+    const tension = computeBehaviorTension(point);
+    return {
+      ...point,
+      tension,
+    };
+  });
+
+  const switches = [];
+  for (let i = 1; i < enriched.length; i++) {
+    const prev = enriched[i - 1];
+    const curr = enriched[i];
+
+    const { delta, magnitude, direction } = computeSwitchForce(
+      prev.tension,
+      curr.tension
+    );
+
+    if (magnitude >= sensitivity * 0.4) {
+      let confidence = magnitude;
+
+      if (curr.minute >= 70) {
+        confidence += 0.1;
+      }
+
+      const dev = clamp01(toNumber(curr.behaviorDeviation, 0) / 100);
+      confidence += dev * 0.15;
+
+      const pressure = clamp01(toNumber(curr.pressureIndex, 50) / 100);
+      if (direction === "down") {
+        confidence += pressure * collapseBias * 0.2;
+      }
+
+      confidence = Math.min(confidence, 1.0);
+
+      let type = "NEUTRAL_SWITCH";
+      if (direction === "up" && confidence >= 0.7) {
+        type = "AGGRESSIVE_LIFT_SWITCH";
+      } else if (direction === "up" && confidence >= 0.5) {
+        type = "POSITIVE_MOMENTUM_SWITCH";
+      } else if (direction === "down" && confidence >= 0.75) {
+        type = "CRITICAL_COLLAPSE_SWITCH";
+      } else if (direction === "down" && confidence >= 0.55) {
+        type = "NEGATIVE_PRESSURE_SWITCH";
+      }
+
+      let explanation = "Behavioral state switch detected.";
+      if (type === "AGGRESSIVE_LIFT_SWITCH") {
+        explanation =
+          "Sharp lift in behavioral tension – likely shift into aggressive / high-risk phase.";
+      } else if (type === "POSITIVE_MOMENTUM_SWITCH") {
+        explanation =
+          "Positive momentum swing – behaviour and xG/pressure shifting in favour of the team.";
+      } else if (type === "CRITICAL_COLLAPSE_SWITCH") {
+        explanation =
+          "Critical negative switch – signs of collapse: rising pressure, behaviour deviation and drop in tension.";
+      } else if (type === "NEGATIVE_PRESSURE_SWITCH") {
+        explanation =
+          "Negative switch under pressure – team drifting into fragile / defensive panic zone.";
+      }
+
+      switches.push({
+        minute: curr.minute,
+        type,
+        direction:
+          direction === "up"
+            ? "positive"
+            : direction === "down"
+            ? "negative"
+            : "flat",
+        confidence: Number(confidence.toFixed(2)),
+        window: {
+          from: prev.minute,
+          to: curr.minute,
+        },
+        tensionBefore: Number(prev.tension.toFixed(3)),
+        tensionAfter: Number(curr.tension.toFixed(3)),
+        explanation,
+      });
+    }
+  }
+
+  switches.sort((a, b) => {
+    if (b.confidence !== a.confidence) {
+      return b.confidence - a.confidence;
+    }
+    return a.minute - b.minute;
+  });
+
+  const avgTension =
+    enriched.reduce((sum, p) => sum + p.tension, 0) / enriched.length;
+
+  const criticalCollapses = switches.filter(
+    (s) => s.type === "CRITICAL_COLLAPSE_SWITCH"
+  );
+  const positiveLifts = switches.filter(
+    (s) =>
+      s.type === "AGGRESSIVE_LIFT_SWITCH" ||
+      s.type === "POSITIVE_MOMENTUM_SWITCH"
+  );
+
+  const summary = {
+    engine: "RBSEngine",
+    points: enriched.length,
+    averageTension: Number(avgTension.toFixed(3)),
+    totalSwitches: switches.length,
+    criticalCollapseCount: criticalCollapses.length,
+    positiveLiftCount: positiveLifts.length,
+    topCriticalCollapse: criticalCollapses[0] || null,
+    topPositiveLift: positiveLifts[0] || null,
+  };
+
+  return {
+    ok: true,
+    engine: "RBSEngine",
+    summary,
+    switches,
+  };
+};
+
+// ----------------- RBS Endpoint -----------------
+
+export const nsiRbsSwitches = (req, res) => {
+  try {
+    const src = req.method === "GET" ? req.query : (req.body || {});
+    const timeline = Array.isArray(src.timeline) ? src.timeline : [];
+    const options = src.options || {};
+
+    const result = buildRBSSignature(timeline, options);
+    return res.json(result);
+  } catch (error) {
+    console.error("RBS switches error:", error);
+    return res.status(500).json({
+      ok: false,
+      engine: "RBSEngine",
+      error: "RBS_ENGINE_ERROR",
+      message: "Unexpected error inside RBSEngine endpoint.",
     });
   }
 };
