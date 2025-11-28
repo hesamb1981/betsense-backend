@@ -1,18 +1,48 @@
-// routes/rbsRoutes.js
-// RBS Engine routes – health + timeline analyze
-
+// engine/routes/rbsRoutes.js
 import express from "express";
-import { rbsHealth, rbsAnalyzeTimeline } from "../controllers/rbsController.js";
 
 const router = express.Router();
 
-// Health check for RBS Engine
-router.get("/health", rbsHealth);
+// GET  /api/rbs/health
+router.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    engine: "RBS",
+    message: "RBS engine health OK",
+  });
+});
 
-// Analyze a full timeline of signals (behavioral switching)
-router.post("/analyze", rbsAnalyzeTimeline);
+// GET  /api/rbs/demo
+router.get("/demo", (req, res) => {
+  res.json({
+    ok: true,
+    engine: "RBS",
+    mode: "demo",
+    summary: "RBS demo analysis (GET).",
+    metrics: {
+      switchRisk: 21,
+      panicFlip: 37,
+      comebackChance: 62,
+    },
+  });
+});
 
-// Alias route – اگر خواستی جداگانه به اسم timeline هم صدا بزنی
-router.post("/timeline", rbsAnalyzeTimeline);
+// POST /api/rbs/demo
+router.post("/demo", (req, res) => {
+  const payload = req.body || {};
+
+  res.json({
+    ok: true,
+    engine: "RBS",
+    mode: "demo",
+    summary: "RBS demo analysis (POST).",
+    received: payload,
+    metrics: {
+      switchRisk: 24,
+      panicFlip: 33,
+      comebackChance: 58,
+    },
+  });
+});
 
 export default router;
