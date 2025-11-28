@@ -1,53 +1,34 @@
-// server.js
-// BetSense Backend – main entry
-// این فایل:
-//  - سرور Express را راه‌اندازی می‌کند
-//  - NSI routes را وصل می‌کند
-//  - RBS routes را وصل می‌کند
-
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 
-// روت‌های NSI و RBS
-import nsiRouter from "./routes/nsiRoutes.js";
-import rbsRouter from "./routes/rbsRoutes.js";
+// ----- IMPORT ROUTES -----
+import rbsRoutes from "./engine/routes/rbsRoutes.js";
 
-dotenv.config();
-
+// ----- EXPRESS APP -----
 const app = express();
-
-// middlewareهای عمومی
 app.use(cors());
 app.use(express.json());
 
-// تست ساده برای اطمینان از آنلاین بودن سرور
+// ----- DEFAULT ROOT -----
 app.get("/", (req, res) => {
-  res.send("BetSense Backend is running ✔️");
+  res.json({ status: "BetSense backend running" });
 });
 
-// -------------------------
-// NSI ENGINE ROUTES
-// آدرس‌ها:
-//   GET  /api/nsi/health
-//   GET  /api/nsi/analyze
-//   POST /api/nsi/analyze
-//   GET  /api/nsi/live
-//   POST /api/nsi/live
-// -------------------------
-app.use("/api/nsi", nsiRouter);
+// ----- HEALTH CHECK -----
+app.get("/api/rbs/health", (req, res) => {
+  res.json({ status: "OK", engine: "RBS Engine Active" });
+});
 
-// -------------------------
-// RBS ENGINE ROUTES
-// آدرس‌ها (طبق rbsRoutes.js):
-//   POST /api/rbs/analyze
-//   POST /api/rbs/batch
-// -------------------------
-app.use("/api/rbs", rbsRouter);
+// ----- ROUTES -----
+app.use("/api/rbs", rbsRoutes);
 
-// پورت سرور
+// ----- 404 HANDLER -----
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+
+// ----- START SERVER -----
 const PORT = process.env.PORT || 10000;
-
 app.listen(PORT, () => {
-  console.log(`BetSense backend listening on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
