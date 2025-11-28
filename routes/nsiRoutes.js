@@ -1,26 +1,23 @@
+// routes/nsiRoutes.js
+// NSI routes – health + demo + analyze
+
 import express from "express";
-import nsiController from "../controllers/nsiController.js";
+import {
+  nsiHealth,
+  nsiDemoAnalyze,
+  nsiAnalyze,
+} from "../controllers/nsiController.js";
 
 const router = express.Router();
 
-// Health
-router.get("/health", nsiController.health);
+// Health: GET /api/nsi/health
+router.get("/health", nsiHealth);
 
-// Analyze (manual)
-router.post("/analyze", nsiController.analyze);
+// Demo analyze: GET /api/nsi/demo
+router.get("/demo", nsiDemoAnalyze);
 
-// Analyze (demo)
-router.post("/demo", (req, res) => {
-  res.json({
-    ok: true,
-    message: "NSI Demo Route Working!",
-    demoSample: {
-      team: "Arsenal",
-      opponent: "Spurs",
-      nsiScore: 0.82,
-      state: "Momentum Surge",
-    },
-  });
-});
+// Full analyze: GET /api/nsi/analyze  و  POST /api/nsi/analyze
+router.get("/analyze", nsiAnalyze);
+router.post("/analyze", nsiAnalyze);
 
 export default router;
