@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
-import rbsRoutes from "./engine/routes/rbsRoutes.js";
-import nsiRoutes from "./engine/routes/nsiRoutes.js";
+
+// Correct paths (because backend has controllers inside /src)
+import rbsRoutes from "./src/routes/rbsRoutes.js";
+import nsiRoutes from "./src/routes/nsiRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -11,9 +13,9 @@ app.use(express.json());
 app.use("/api/rbs", rbsRoutes);
 app.use("/api/nsi", nsiRoutes);
 
-// Default root
+// Health route
 app.get("/", (req, res) => {
-  res.json({ status: "Backend Running" });
+  res.json({ ok: true, status: "Backend Running" });
 });
 
 // Not found
