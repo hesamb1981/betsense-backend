@@ -1,28 +1,45 @@
-// src/controllers/metaController.js
+// controllers/metaController.js
+// Meta Behavior Engine - simple demo + health
 
-export const metaDemo = async (req, res) => {
-  try {
-    const sampleAnalysis = {
-      engine: "Meta Behavior Engine",
-      version: "1.0",
-      status: "demo-mode",
-      confidence: `${Math.floor(Math.random() * 11) + 90}%`,
-      message: "Meta-behavior pattern successfully generated.",
-      patterns: {
-        aggression: Math.random().toFixed(2),
-        stability: Math.random().toFixed(2),
-        unpredictability: Math.random().toFixed(2),
-        pressureResponse: Math.random().toFixed(2),
-      },
-      timestamp: new Date().toISOString(),
+const metaController = {
+  // تست سلامت
+  health: (req, res) => {
+    res.json({
+      ok: true,
+      engine: "MetaBehaviorEngine",
+      status: "META_ENGINE_HEALTHY",
+      message: "Meta Behavior Engine is up and ready.",
+    });
+  },
+
+  // دمو ساده برای تست اتصال
+  demo: (req, res) => {
+    // این مقادیر فقط برای دمو هستن
+    const sampleInput = {
+      gamesAnalyzed: 50,
+      leagues: ["Premier League", "LaLiga", "Serie A"],
+      seasons: ["2018-2019", "2019-2020", "2020-2021"],
     };
 
-    return res.json(sampleAnalysis);
-  } catch (err) {
-    return res.status(500).json({
-      engine: "Meta Behavior Engine",
-      error: "Meta demo failed",
-      details: err.message,
+    const sampleOutput = {
+      metaScore: 0.87,
+      volatilityBand: "HIGH_SIGNAL",
+      clustersDetected: 12,
+      dominantPatterns: [
+        "Late-game collapse risk under sustained high press",
+        "High behavioral switching in final 15 minutes",
+        "Momentum carry-over between back-to-back fixtures",
+      ],
+    };
+
+    res.json({
+      ok: true,
+      engine: "MetaBehaviorEngine",
+      mode: "demo",
+      inputSample: sampleInput,
+      metaSignature: sampleOutput,
     });
-  }
+  },
 };
+
+export default metaController;
