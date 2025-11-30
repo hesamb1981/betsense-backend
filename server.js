@@ -1,46 +1,45 @@
+// server.js
 import express from "express";
 import cors from "cors";
 
-// --------------------------
-// ROUTES
-// --------------------------
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
-import metaRoutes from "./routes/metaRoutes.js";
+import { geniusRouter } from "./routes/geniusRoutes.js";
+import { nsiRouter } from "./routes/nsiRoutes.js";
+import { rbsRouter } from "./routes/rbsRoutes.js";
+import { metaRouter } from "./routes/metaRoutes.js";
 
 const app = express();
+const PORT = process.env.PORT || 10000;
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// --------------------------
-// API MOUNT POINTS
-// --------------------------
-app.use("/api/nsi", nsiRoutes);
-app.use("/api/rbs", rbsRoutes);
-app.use("/api/meta", metaRoutes);
-
-// --------------------------
-// ROOT HEALTH
-// --------------------------
+// Health check
 app.get("/", (req, res) => {
   res.json({
     ok: true,
     status: "Backend Running",
-    engines: ["NSI", "RBS", "META"],
   });
 });
 
-// --------------------------
-// 404 HANDLER
-// --------------------------
+// API routes
+app.use("/api/genius", geniusRouter);
+app.use("/api/nsi", nsiRouter);
+app.use("/api/rbs", rbsRouter);
+app.use("/api/meta", metaRouter);
+
+// 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Not found" });
+  res.status(404).json({ error: "Not Found" });
 });
 
-// --------------------------
-// SERVER START
-// --------------------------
-const PORT = process.env.PORT || 3000;
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// Start server
 app.listen(PORT, () => {
-  console.log("BetSense backend running on port", PORT);
+  console.log(`BetSense backend running on port ${PORT}`);
 });
