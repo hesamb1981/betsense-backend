@@ -1,13 +1,16 @@
-// routes/metaRoutes.js
-import express from "express";
-import { metaDemo, metaLive } from "../controllers/metaController.js";
-
+// betsense-backend/routes/metaRoutes.js
+const express = require("express");
 const router = express.Router();
 
-// GET /api/meta/demo
-router.get("/demo", metaDemo);
+const {
+  runMetaDemo,
+  runMetaLive,
+} = require("../controllers/metaController");
 
-// GET /api/meta/live
-router.get("/live", metaLive);
+// GET /meta/demo  یا /api/meta/demo
+router.get("/demo", runMetaDemo);
 
-export default router;
+// POST /meta/live  یا /api/meta/live
+router.post("/live", runMetaLive);
+
+module.exports = router;
