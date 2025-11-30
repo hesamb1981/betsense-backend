@@ -1,16 +1,21 @@
-// engine/routes/rbsRoutes.js
-// Routes for RBS Engine (Real Behavioral Switching)
-
 import express from "express";
-import { rbsHealth, rbsDemoAnalyze } from "../controllers/rbsController.js";
+import { rbsHealthCheck, rbsDemo } from "../controllers/rbsController.js";
 
 const router = express.Router();
 
 // Health check
-router.get("/health", rbsHealth);
+router.get("/", (req, res) => {
+  return res.json({
+    ok: true,
+    engine: "RBS Engine",
+    status: "RBS route OK",
+  });
+});
 
-// Demo / analysis endpoint (GET + POST برای راحتی تست)
-router.get("/demo", rbsDemoAnalyze);
-router.post("/demo", rbsDemoAnalyze);
+// Demo endpoint
+router.get("/demo", rbsDemo);
+
+// Health endpoint
+router.get("/health", rbsHealthCheck);
 
 export default router;
