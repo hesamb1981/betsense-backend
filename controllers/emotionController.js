@@ -1,55 +1,35 @@
-// controllers/emotionController.js
-// Controller for Emotion Engine endpoints (v0.1).
+// controllers/metaController.js
 
-import { logRequest, sendSuccess, sendError } from "../utils/index.js";
-import { runEmotionEngine } from "../engine/EmotionEngine.js";
-
-// GET /api/emotion/health
-export const emotionHealth = (req, res) => {
-  logRequest(req);
-
-  return sendSuccess(res, {
-    engine: "EmotionEngine",
-    status: "online",
-  });
-};
-
-// GET /api/emotion/analyze
-// v0.1 – wires HTTP query into EmotionEngine core logic.
-export const emotionAnalyze = async (req, res) => {
+exports.runMetaOptionD = async (req, res) => {
   try {
-    logRequest(req);
-
-    const {
-      fixtureId,
-      homeTeam,
-      awayTeam,
-      crowdHeat,
-      pressureSwing,
-      shockRisk,
-    } = req.query;
-
-    const input = {
-      fixtureId: fixtureId || null,
-      homeTeam: homeTeam || null,
-      awayTeam: awayTeam || null,
+    // DEMO OUTPUT FOR META BEHAVIOR ENGINE (OPTION D)
+    const demoResponse = {
+      ok: true,
+      engine: "Meta-Behavior",
+      mode: "demo",
+      summary: "Meta Behavior Engine demo output (Option D)",
       metrics: {
-        crowdHeat: crowdHeat !== undefined ? Number(crowdHeat) : null,
-        pressureSwing:
-          pressureSwing !== undefined ? Number(pressureSwing) : null,
-        shockRisk: shockRisk !== undefined ? Number(shockRisk) : null,
+        stabilityScore: 82,
+        deviationRisk: 24,
+        switchingZones: 3,
+        fusionImpact: 67,
+        regimeInstability: 22,
+        liveAdjustment: false
       },
+      narrative: {
+        short:
+          "System behavior remains stable with moderate fusion impact and minor deviation risk.",
+        long:
+          "Meta Behavior Engine detects a generally stable behavior structure across combined layers. Fusion impact is moderately high, but deviation risk remains low. No major switching patterns detected."
+      }
     };
 
-    const result = runEmotionEngine(input);
-
-    return sendSuccess(res, {
-      engine: "EmotionEngine",
-      mode: result.mode,
-      input,
-      result,
+    return res.status(200).json(demoResponse);
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: "Meta Behavior demo failed.",
+      details: err.message
     });
-  } catch (error) {
-    return sendError(res, error);
   }
 };
