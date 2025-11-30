@@ -1,16 +1,16 @@
-// src/routes/metaRoutes.js
-import express from "express";
-import metaController from "../controllers/metaController.js";
-
+const express = require("express");
 const router = express.Router();
 
-// Health check – برای تست سلامت Meta Behavior Engine
-router.get("/health", metaController.health);
+const metaController = require("../controllers/metaController");
 
-// تحلیل اصلی متا (تایم‌لاین واقعی که از UI یا سیستم میاد)
-router.post("/analyze", metaController.analyze);
+// -------------------------------
+//        META BEHAVIOR ROUTES
+// -------------------------------
 
-// دمو Option D – برای تست سریع با نمونه‌ی پیش‌فرض
-router.post("/demo", metaController.demo);
+// Demo Mode (Option D)
+router.get("/meta/demo", metaController.metaDemo);
 
-export default router;
+// Live Mode (Enterprise)
+router.get("/meta/live", metaController.metaLive);
+
+module.exports = router;
