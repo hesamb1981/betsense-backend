@@ -1,16 +1,18 @@
-const express = require("express");
+// routes/metaRoutes.js
+// Meta Behavior Engine – API routes
+
+import express from "express";
+import metaController from "../controllers/metaController.js";
+
 const router = express.Router();
 
-const metaController = require("../controllers/metaController");
+// GET /api/meta/health
+router.get("/health", metaController.health);
 
-// -------------------------------
-//        META BEHAVIOR ROUTES
-// -------------------------------
+// GET /api/meta/demo
+router.get("/demo", metaController.demo);
 
-// Demo Mode (Option D)
-router.get("/meta/demo", metaController.metaDemo);
+// POST /api/meta/analyze
+router.post("/analyze", metaController.analyze);
 
-// Live Mode (Enterprise)
-router.get("/meta/live", metaController.metaLive);
-
-module.exports = router;
+export default router;
