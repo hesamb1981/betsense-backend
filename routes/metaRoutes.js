@@ -1,13 +1,13 @@
 // routes/metaRoutes.js
 import express from "express";
-import metaController from "../controllers/metaController.js";
+import { metaDemo, metaLive } from "../controllers/metaController.js";
 
 const router = express.Router();
 
-// Health check برای Meta Behavior Engine
-router.get("/health", metaController.health);
+// GET /api/meta/demo
+router.get("/demo", metaDemo);
 
-// Demo ساده برای تست
-router.get("/demo", metaController.demo);
+// GET /api/meta/live
+router.get("/live", metaLive);
 
 export default router;
