@@ -1,26 +1,35 @@
 import express from "express";
 import cors from "cors";
 
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
+// Routes for independent engines (inside /engine/routes)
+import nsiRoutes from "./engine/routes/nsiRoutes.js";
+import rbsRoutes from "./engine/routes/rbsRoutes.js";
+import metaRoutes from "./engine/routes/metaRoutes.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ROUTES
+// Attach engine APIs
 app.use("/api/nsi", nsiRoutes);
 app.use("/api/rbs", rbsRoutes);
+app.use("/api/meta", metaRoutes);
 
-// HEALTH
+// Root health
 app.get("/", (req, res) => {
-  res.json({ ok: true, status: "Backend Running" });
+  res.json({
+    ok: true,
+    service: "BetSense Engine Backend",
+    engines: ["NSI", "RBS", "META"],
+  });
 });
 
-// 404
+// 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Not Found" });
+  res.status(404).json({ error: "Not found" });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on port", PORT));
+app.listen(PORT, () => {
+  console.log("BetSense Engine Backend running on port", PORT);
+});
