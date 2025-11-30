@@ -1,45 +1,57 @@
 // controllers/metaController.js
-// Meta Behavior Engine - simple demo + health
 
-const metaController = {
-  // تست سلامت
-  health: (req, res) => {
-    res.json({
+// META BEHAVIOR DEMO (Option D)
+export const metaDemo = async (req, res) => {
+  try {
+    const demoResponse = {
       ok: true,
-      engine: "MetaBehaviorEngine",
-      status: "META_ENGINE_HEALTHY",
-      message: "Meta Behavior Engine is up and ready.",
-    });
-  },
-
-  // دمو ساده برای تست اتصال
-  demo: (req, res) => {
-    // این مقادیر فقط برای دمو هستن
-    const sampleInput = {
-      gamesAnalyzed: 50,
-      leagues: ["Premier League", "LaLiga", "Serie A"],
-      seasons: ["2018-2019", "2019-2020", "2020-2021"],
-    };
-
-    const sampleOutput = {
-      metaScore: 0.87,
-      volatilityBand: "HIGH_SIGNAL",
-      clustersDetected: 12,
-      dominantPatterns: [
-        "Late-game collapse risk under sustained high press",
-        "High behavioral switching in final 15 minutes",
-        "Momentum carry-over between back-to-back fixtures",
-      ],
-    };
-
-    res.json({
-      ok: true,
-      engine: "MetaBehaviorEngine",
+      engine: "Meta-Behavior",
       mode: "demo",
-      inputSample: sampleInput,
-      metaSignature: sampleOutput,
+      summary: "Meta Behavior Engine demo output (Option D)",
+      metrics: {
+        stabilityScore: 82,
+        deviationRisk: 24,
+        switchingZones: 3,
+        fusionImpact: 67,
+        regimeInstability: 22,
+        liveAdjustment: false
+      },
+      narrative: {
+        short:
+          "System behavior remains stable with moderate fusion impact and minor deviation risk.",
+        long:
+          "Meta Behavior Engine detects a generally stable behavior structure across combined layers. Fusion impact is moderately high, but deviation risk remains low. No major switching patterns detected."
+      }
+    };
+
+    return res.status(200).json(demoResponse);
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: "Meta Behavior demo failed.",
+      details: err.message
     });
-  },
+  }
 };
 
-export default metaController;
+// META BEHAVIOR LIVE (stub)
+export const metaLive = async (req, res) => {
+  try {
+    const liveResponse = {
+      ok: true,
+      engine: "Meta-Behavior",
+      mode: "live",
+      summary: "Meta Behavior LIVE endpoint is online (stub).",
+      note:
+        "This is a placeholder live endpoint. Enterprise buyers will pipe their own feeds into the Meta Behavior Engine stack."
+    };
+
+    return res.status(200).json(liveResponse);
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: "Meta Behavior live failed.",
+      details: err.message
+    });
+  }
+};
