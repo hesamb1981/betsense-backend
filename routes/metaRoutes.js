@@ -1,18 +1,24 @@
 // routes/metaRoutes.js
+// Meta Behavior Engine routes – CommonJS version
 
 const express = require("express");
+const metaController = require("../controllers/metaController");
+
 const router = express.Router();
-const {
-  handleMetaDemo,
-  handleMetaLive,
-} = require("../controllers/metaController");
 
-// هم GET و هم POST رو می‌گیریم که از هر دو طرف کار کنه
+// Health check
+router.get("/health", (req, res) => {
+  return res.json({
+    ok: true,
+    engine: "Meta-Behavior",
+    status: "healthy",
+  });
+});
 
-// /api/meta-demo
-router.all("/meta-demo", handleMetaDemo);
+// Demo endpoint – used by meta-demo.js
+router.get("/demo", metaController.demo);
 
-// /api/meta-live
-router.all("/meta-live", handleMetaLive);
+// Live endpoint – used by meta-live.js
+router.get("/live", metaController.live);
 
 module.exports = router;
