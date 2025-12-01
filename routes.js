@@ -1,25 +1,26 @@
-// routes.js
-// Main router index for all engines
+// routes.js  (ROOT of betsense-backend)
 
 const express = require("express");
+const router = express.Router();
 
+// ===== زیرروت‌های قبلی =====
+const dataspineRoutes = require("./routes/dataspineRoutes");
 const nsiRoutes = require("./routes/nsiRoutes");
 const rbsRoutes = require("./routes/rbsRoutes");
 const geniusRoutes = require("./routes/geniusRoutes");
 const emotionRoutes = require("./routes/emotionRoutes");
+
+// ===== متا =====
 const metaRoutes = require("./routes/metaRoutes");
-const dataspineRoutes = require("./routes/dataspineRoutes");
 
-const router = express.Router();
+// هرکدوم از این روترها، خودشون مسیر خودشون رو تعریف می‌کنن
+router.use("/", dataspineRoutes);
+router.use("/", nsiRoutes);
+router.use("/", rbsRoutes);
+router.use("/", geniusRoutes);
+router.use("/", emotionRoutes);
 
-// قبلی‌ها
-router.use("/nsi", nsiRoutes);
-router.use("/rbs", rbsRoutes);
-router.use("/genius", geniusRoutes);
-router.use("/emotion", emotionRoutes);
-router.use("/meta", metaRoutes);
-
-// جدید – DataSpine
-router.use("/dataspine", dataspineRoutes);
+// متا
+router.use("/", metaRoutes);
 
 module.exports = router;
