@@ -1,24 +1,15 @@
-// routes.js
-// تجمیع تمام روت‌های API (NSI, RBS, Genius, Meta و ...)
+// routes/metaRoutes.js
+// Routes for Meta Behavior Engine
 
 const express = require("express");
-
-const nsiRoutes = require("./routes/nsiRoutes");
-const rbsRoutes = require("./routes/rbsRoutes");
-const geniusRoutes = require("./routes/geniusRoutes");
-const metaRoutes = require("./routes/metaRoutes");
+const metaController = require("../controllers/metaController");
 
 const router = express.Router();
 
-// Health ساده برای /api
-router.get("/health", (req, res) => {
-  res.json({ ok: true, api: "BetSense API OK" });
-});
+// Demo endpoint
+router.get("/demo", metaController.demo);
 
-// هر انجین زیر خودش
-router.use("/nsi", nsiRoutes);
-router.use("/rbs", rbsRoutes);
-router.use("/genius", geniusRoutes);
-router.use("/meta", metaRoutes);
+// Live endpoint (placeholder فعلی)
+router.get("/live", metaController.live);
 
 module.exports = router;
