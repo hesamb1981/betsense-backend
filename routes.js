@@ -1,29 +1,27 @@
-import express from "express";
-
-import metaRoutes from "./routes/metaRoutes.js";
-import datasplineRoutes from "./routes/dataspineRoutes.js";
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
-import geniusRoutes from "./routes/geniusRoutes.js";
-import emotionRoutes from "./routes/emotionRoutes.js";
-
+const express = require("express");
 const router = express.Router();
 
-// -----------------------------
-// HEALTH CHECK
-// -----------------------------
+// ---------------------------
+//  API ROUTE MODULES
+// ---------------------------
+const dataspineRoutes = require("./routes/dataspineRoutes");
+const geniusRoutes = require("./routes/geniusRoutes");
+const metaRoutes = require("./routes/metaRoutes");
+const nsiRoutes = require("./routes/nsiRoutes");
+const rbsRoutes = require("./routes/rbsRoutes");
+
+// کوچک برای تست /api
 router.get("/", (req, res) => {
-  res.json({ ok: true, status: "Backend Running" });
+  res.json({ ok: true, scope: "api-root" });
 });
 
-// -----------------------------
-// CONNECT ALL ROUTES
-// -----------------------------
+// ---------------------------
+//  MOUNT ENGINES
+// ---------------------------
+router.use("/dataspine", dataspineRoutes);
+router.use("/genius", geniusRoutes);
 router.use("/meta", metaRoutes);
-router.use("/dataspine", datasplineRoutes);
 router.use("/nsi", nsiRoutes);
 router.use("/rbs", rbsRoutes);
-router.use("/genius", geniusRoutes);
-router.use("/emotion", emotionRoutes);
 
-export default router;
+module.exports = router;
