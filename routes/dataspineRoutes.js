@@ -1,19 +1,9 @@
-// routes/dataspineRoutes.js
-
-const express = require("express");
-const dataspineController = require("../controllers/dataspineController");
+// routes/dataSpineRoutes.js
+import express from "express";
+import { dataSpineHandler } from "../controllers/dataSpineController.js";
 
 const router = express.Router();
 
-// Health ساده برای تست اگر خواستی
-router.get("/health", (req, res) => {
-  res.json({ ok: true, engine: "DataSpine", status: "Route OK" });
-});
+router.post("/generate", dataSpineHandler);
 
-// DEMO
-router.get("/demo", dataspineController.demo);
-
-// LIVE
-router.post("/live", dataspineController.live);
-
-module.exports = router;
+export default router;
