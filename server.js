@@ -1,22 +1,38 @@
-import express from "express";
-import cors from "cors";
-import routes from "./routes.js";
+// server.js  – BetSense Backend
+
+const express = require("express");
+const cors = require("cors");
+const routes = require("./routes");
 
 const app = express();
+const PORT = process.env.PORT || 10000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ROUTES
+// Health check
+app.get("/", (req, res) => {
+  res.json({ ok: true, status: "Backend Running" });
+});
+
+// API routes
 app.use("/api", routes);
 
-// NOT FOUND HANDLER
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-// START
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log("SERVER RUNNING on port", PORT);
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("Internal error:", err);
+  res.status(500).json({ error: "Server Error" });
 });
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`BetSense backend running on port ${PORT}`);
+});
+
+module.exports = app;
