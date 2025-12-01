@@ -1,24 +1,24 @@
 // routes/metaRoutes.js
-// CommonJS version – برای backend فعلی BetSense
+// Meta Behavior Engine routes (CommonJS)
 
 const express = require("express");
 const metaController = require("../controllers/metaController");
 
 const router = express.Router();
 
-// Health (اگر بعداً خواستی تست سلامت هم داشته باشی)
-router.get("/health", metaController.health || ((req, res) => {
+// Health check مخصوص متا
+router.get("/health", (req, res) => {
   return res.json({
     ok: true,
     engine: "Meta-Behavior",
-    status: "HEALTHY (routes/metaRoutes.js)",
+    status: "meta routes ok",
   });
-}));
+});
 
-// DEMO endpoint – برای تست دمو
+// DEMO – برای تست از مرورگر (GET)
 router.get("/demo", metaController.demo);
 
-// LIVE endpoint – برای تست لایو
+// LIVE – برای تست از مرورگر (GET)
 router.get("/live", metaController.live);
 
 module.exports = router;
