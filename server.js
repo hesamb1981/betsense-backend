@@ -1,59 +1,42 @@
-// betsense-backend/server.js
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
+
+// ---- ROUTES ----
+import nsiRoutes from "./routes/nsiRoutes.js";
+import rbsRoutes from "./routes/rbsRoutes.js";
+import metaRoutes from "./routes/metaRoutes.js";
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 
+// ---- MIDDLEWARE ----
 app.use(cors());
 app.use(express.json());
 
-// ---------------------------
-// Health check
-// ---------------------------
+// ---- HEALTH ROOT ----
 app.get("/", (req, res) => {
-  return res.json({ ok: true, status: "Backend Running" });
+  res.json({
+    ok: true,
+    service: "BetSense Ultra Backend",
+    routes: ["/api/nsi", "/api/rbs", "/api/meta"],
+  });
 });
 
-// ---------------------------
-// Routes
-// ---------------------------
-const nsiRoutes = require("./routes/nsiRoutes");
-const rbsRoutes = require("./routes/rbsRoutes");
-const geniusRoutes = require("./routes/geniusRoutes");
-const metaRoutes = require("./routes/metaRoutes");
-// اگر Emotion هم داشتی:
-let emotionRoutes;
-try {
-  emotionRoutes = require("./routes/emotionRoutes");
-} catch (e) {
-  emotionRoutes = null;
-}
-
-// بدون /api
-app.use("/nsi", nsiRoutes);
-app.use("/rbs", rbsRoutes);
-app.use("/genius", geniusRoutes);
-if (emotionRoutes) app.use("/emotion", emotionRoutes);
-app.use("/meta", metaRoutes);
-
-// با /api  (برای اینکه هر دو استایل قبلی و جدید کار کنند)
+// ---- API ROUTES ----
 app.use("/api/nsi", nsiRoutes);
 app.use("/api/rbs", rbsRoutes);
-app.use("/api/genius", geniusRoutes);
-if (emotionRoutes) app.use("/api/emotion", emotionRoutes);
 app.use("/api/meta", metaRoutes);
 
-// ---------------------------
-// 404 handler
-// ---------------------------
+// ---- 404 HANDLER ----
 app.use((req, res) => {
-  return res.status(404).json({ error: "Not Found" });
+  res.status(404).json({
+    ok: false,
+    error: "Not found",
+    path: req.originalUrl || null,
+  });
 });
 
-// ---------------------------
-// Start server
-// ---------------------------
+// ---- START SERVER ----
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`BetSense backend running on port ${PORT}`);
+  console.log("BetSense backend running on port", PORT);
 });
