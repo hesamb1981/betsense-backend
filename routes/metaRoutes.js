@@ -1,36 +1,24 @@
 // routes.js
-// Main API router for BetSense backend (CommonJS)
+// تجمیع تمام روت‌های API (NSI, RBS, Genius, Meta و ...)
 
 const express = require("express");
 
-const geniusRoutes = require("./routes/geniusRoutes");
 const nsiRoutes = require("./routes/nsiRoutes");
 const rbsRoutes = require("./routes/rbsRoutes");
+const geniusRoutes = require("./routes/geniusRoutes");
 const metaRoutes = require("./routes/metaRoutes");
 
 const router = express.Router();
 
-// یک هلت‌چک کلی برای /api
+// Health ساده برای /api
 router.get("/health", (req, res) => {
-  return res.json({
-    ok: true,
-    service: "BetSense Backend API",
-    version: "1.0",
-  });
+  res.json({ ok: true, api: "BetSense API OK" });
 });
 
-// --------- ENGINE ROUTES ---------
-
-// Genius / Fusion یا هرچی که این روت هندل می‌کند
-router.use("/genius", geniusRoutes);
-
-// NSI Engine
+// هر انجین زیر خودش
 router.use("/nsi", nsiRoutes);
-
-// RBS Engine
 router.use("/rbs", rbsRoutes);
-
-// META Behavior Engine (Option D)
+router.use("/genius", geniusRoutes);
 router.use("/meta", metaRoutes);
 
 module.exports = router;
