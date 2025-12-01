@@ -14,14 +14,14 @@ exports.demo = async (req, res) => {
         switchingZones: 3,
         fusionImpact: 67,
         regimeInstability: 22,
-        liveAdjustment: false,
+        liveAdjustment: false
       },
       narrative: {
         short:
           "System behavior remains stable with moderate fusion impact and minor deviation risk.",
         long:
-          "Meta Behavior Engine detects a generally stable behavior structure across combined layers. Fusion impact is moderately high, but deviation risk remains low. No major switching patterns detected.",
-      },
+          "Meta Behavior Engine detects a generally stable behavior structure across combined layers. Fusion impact is moderately high, but deviation risk remains low. No major switching patterns detected."
+      }
     };
 
     return res.status(200).json(demoResponse);
@@ -30,28 +30,27 @@ exports.demo = async (req, res) => {
     return res.status(500).json({
       ok: false,
       error: "Meta Behavior demo failed.",
-      details: err.message,
+      details: err.message
     });
   }
 };
 
-// LIVE endpoint – فعلاً نسخهٔ ساده (بعداً به انجین و دادهٔ واقعی وصلش می‌کنیم)
+// LIVE endpoint – فعلاً نسخهٔ ساده
 exports.live = async (req, res) => {
   try {
-    // می‌تونی بعداً matchId یا هر پارامتر دیگه هم اضافه کنی
     return res.status(200).json({
       ok: true,
       engine: "Meta-Behavior",
       mode: "live",
       note:
-        "Meta Behavior live endpoint placeholder – ready for real data wiring later.",
+        "Meta Behavior live endpoint placeholder – ready for real data wiring later."
     });
   } catch (err) {
     console.error("Meta live error:", err);
     return res.status(500).json({
       ok: false,
       error: "Meta Behavior live failed.",
-      details: err.message,
+      details: err.message
     });
   }
 };
