@@ -1,26 +1,29 @@
-// routes.js  (ROOT of betsense-backend)
+import express from "express";
 
-const express = require("express");
+import metaRoutes from "./routes/metaRoutes.js";
+import datasplineRoutes from "./routes/dataspineRoutes.js";
+import nsiRoutes from "./routes/nsiRoutes.js";
+import rbsRoutes from "./routes/rbsRoutes.js";
+import geniusRoutes from "./routes/geniusRoutes.js";
+import emotionRoutes from "./routes/emotionRoutes.js";
+
 const router = express.Router();
 
-// ===== زیرروت‌های قبلی =====
-const dataspineRoutes = require("./routes/dataspineRoutes");
-const nsiRoutes = require("./routes/nsiRoutes");
-const rbsRoutes = require("./routes/rbsRoutes");
-const geniusRoutes = require("./routes/geniusRoutes");
-const emotionRoutes = require("./routes/emotionRoutes");
+// -----------------------------
+// HEALTH CHECK
+// -----------------------------
+router.get("/", (req, res) => {
+  res.json({ ok: true, status: "Backend Running" });
+});
 
-// ===== متا =====
-const metaRoutes = require("./routes/metaRoutes");
+// -----------------------------
+// CONNECT ALL ROUTES
+// -----------------------------
+router.use("/meta", metaRoutes);
+router.use("/dataspine", datasplineRoutes);
+router.use("/nsi", nsiRoutes);
+router.use("/rbs", rbsRoutes);
+router.use("/genius", geniusRoutes);
+router.use("/emotion", emotionRoutes);
 
-// هرکدوم از این روترها، خودشون مسیر خودشون رو تعریف می‌کنن
-router.use("/", dataspineRoutes);
-router.use("/", nsiRoutes);
-router.use("/", rbsRoutes);
-router.use("/", geniusRoutes);
-router.use("/", emotionRoutes);
-
-// متا
-router.use("/", metaRoutes);
-
-module.exports = router;
+export default router;
