@@ -1,30 +1,30 @@
-// routes/metaRoutes.js
-// META BEHAVIOR ENGINE – ROUTES
+// betsense-backend/routes.js
 
-const express = require("express");
+import express from "express";
+
+import dataspineRoutes from "./routes/dataspineRoutes.js";
+import geniusRoutes from "./routes/geniusRoutes.js";
+import nsiRoutes from "./routes/nsiRoutes.js";
+import rbsRoutes from "./routes/rbsRoutes.js";
+import metaRoutes from "./routes/metaRoutes.js";
+
 const router = express.Router();
 
-const metaController = require("../controllers/metaController");
+// -------- Engine route groups --------
 
-// -----------------------------
-// HEALTH CHECK
-// -----------------------------
-router.get("/health", (req, res) => {
-  res.json({
-    ok: true,
-    engine: "Meta-Behavior",
-    status: "Routes OK",
-  });
-});
+// DataSpine Engine
+router.use("/dataspine", dataspineRoutes);
 
-// -----------------------------
-// DEMO
-// -----------------------------
-router.get("/demo", metaController.demo);
+// Genius / Emotion Engine
+router.use("/genius", geniusRoutes);
 
-// -----------------------------
-// LIVE
-// -----------------------------
-router.get("/live", metaController.live);
+// NSI Engine
+router.use("/nsi", nsiRoutes);
 
-module.exports = router;
+// RBS Engine
+router.use("/rbs", rbsRoutes);
+
+// Meta Behavior Engine  🔥
+router.use("/meta", metaRoutes);
+
+export default router;
