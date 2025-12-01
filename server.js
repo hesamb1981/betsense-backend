@@ -1,39 +1,43 @@
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
+// server.js
 
-import geniusRoutes from "./routes/geniusRoutes.js";
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
-import metaRoutes from "./routes/metaRoutes.js";
+const express = require("express");
+const cors = require("cors");
+
+const routes = require("./routes"); // روت‌های قدیمی (NSI, RBS, Genius, Emotion و ...)
+
+const metaController = require("./controllers/metaController");
 
 const app = express();
+const PORT = process.env.PORT || 10000;
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ----------------------
-// ROOT TEST
-// ----------------------
+// Health check اصلی
 app.get("/", (req, res) => {
   res.json({ ok: true, status: "Backend Running" });
 });
 
-// ----------------------
-// ENGINE ROUTES
-// ----------------------
-app.use("/api/genius", geniusRoutes);
-app.use("/api/nsi", nsiRoutes);
-app.use("/api/rbs", rbsRoutes);
-app.use("/api/meta", metaRoutes);   // <-- مهم‌ترین خط
+// تمام روت‌های قبلی (NSI, RBS, Emotion, Genius) زیر /api
+app.use("/api", routes);
 
-// ----------------------
-// STATIC
-// ----------------------
-app.use(express.static(path.join(__dirname, "public")));
+// -----------------------------
+// META BEHAVIOR – مستقیم روی سرور
+// -----------------------------
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+// DEMO
+app.get("/api/meta/demo", metaController.demo);
+
+// LIVE
+app.get("/api/meta/live", metaController.live);
+
+// 404 برای بقیه مسیرهایی که پیدا نمی‌شن
+app.use((req, res) => {
+  res.status(404).json({ error: "Not Found" });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`BetSense backend listening on port ${PORT}`);
+});
