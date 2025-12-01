@@ -1,27 +1,26 @@
-const express = require("express");
+// routes.js
+// Master router for BetSense backend
+
+import express from "express";
+
+import metaRoutes from "./routes/metaRoutes.js";
+import datasplineRoutes from "./routes/datasplineRoutes.js";
+import geniusRoutes from "./routes/geniusRoutes.js";
+import nsiRoutes from "./routes/nsiRoutes.js";
+import rbsRoutes from "./routes/rbsRoutes.js";
+
 const router = express.Router();
 
-// ---------------------------
-//  API ROUTE MODULES
-// ---------------------------
-const dataspineRoutes = require("./routes/dataspineRoutes");
-const geniusRoutes = require("./routes/geniusRoutes");
-const metaRoutes = require("./routes/metaRoutes");
-const nsiRoutes = require("./routes/nsiRoutes");
-const rbsRoutes = require("./routes/rbsRoutes");
-
-// کوچک برای تست /api
+// Health check
 router.get("/", (req, res) => {
-  res.json({ ok: true, scope: "api-root" });
+  res.json({ ok: true, status: "Backend Running" });
 });
 
-// ---------------------------
-//  MOUNT ENGINES
-// ---------------------------
-router.use("/dataspine", dataspineRoutes);
-router.use("/genius", geniusRoutes);
+// Engine Routes
 router.use("/meta", metaRoutes);
+router.use("/dataspine", datasplineRoutes);
+router.use("/genius", geniusRoutes);
 router.use("/nsi", nsiRoutes);
 router.use("/rbs", rbsRoutes);
 
-module.exports = router;
+export default router;
