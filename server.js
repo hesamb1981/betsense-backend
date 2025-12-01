@@ -1,43 +1,40 @@
 // server.js
+// BetSense Backend - CommonJS version with META routes wired
 
-import express from "express";
-import cors from "cors";
+const express = require("express");
+const cors = require("cors");
 
-// همه روت‌های قبلی (NSI, RBS, Emotion, Genius, Fusion …)
-import routes from "./routes/index.js";
+// روت‌های قدیمی (NSI, RBS, Genius, Emotion و ...)
+// فرض می‌کنیم قبلاً داخل ./routes ایندکس شده‌اند
+const routes = require("./routes");
 
-// Meta Engine files
-import metaRoutes from "./meta/metaRoutes.js";
+// روت متا بیهیویر
+const metaRoutes = require("./routes/metaRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Health check اصلی
+// Health اصلی بک‌اند
 app.get("/", (req, res) => {
-  res.json({ ok: true, status: "BetSense Backend Running" });
+  res.json({ ok: true, status: "Backend Running" });
 });
 
-// -----------------------------
-// روت‌های اصلی تمام انجین‌ها
-// -----------------------------
+// تمام روت‌های قبلی زیر /api
 app.use("/api", routes);
 
-// -----------------------------
-// META BEHAVIOR ENGINE (Option D)
-// -----------------------------
+// META Behavior Engine زیر /api/meta
 app.use("/api/meta", metaRoutes);
 
-// -----------------------------
-// 404 – هر مسیر دیگه
-// -----------------------------
+// 404 برای بقیه مسیرها
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-// Start server
+// استارت سرور
 app.listen(PORT, () => {
   console.log(`BetSense backend listening on port ${PORT}`);
 });
