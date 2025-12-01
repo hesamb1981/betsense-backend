@@ -4,7 +4,7 @@
 import express from "express";
 
 import metaRoutes from "./routes/metaRoutes.js";
-import datasplineRoutes from "./routes/datasplineRoutes.js";
+import dataspineRoutes from "./routes/dataspineRoutes.js";
 import geniusRoutes from "./routes/geniusRoutes.js";
 import nsiRoutes from "./routes/nsiRoutes.js";
 import rbsRoutes from "./routes/rbsRoutes.js";
@@ -18,7 +18,7 @@ router.get("/", (req, res) => {
 
 // Engine Routes
 router.use("/meta", metaRoutes);
-router.use("/dataspine", datasplineRoutes);
+router.use("/dataspine", dataspineRoutes);
 router.use("/genius", geniusRoutes);
 router.use("/nsi", nsiRoutes);
 router.use("/rbs", rbsRoutes);
