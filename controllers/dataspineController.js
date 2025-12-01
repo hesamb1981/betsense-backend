@@ -1,4 +1,4 @@
-// controllers/dataSpineController.js
+// controllers/dataspineController.js
 import { generateDataSpineInsights } from "../engine/dataspine/DataSpineEngine.js";
 
 export const dataSpineHandler = (req, res) => {
