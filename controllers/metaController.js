@@ -1,48 +1,25 @@
 // controllers/metaController.js
+import MetaBehaviorEngine from "../engine/MetaBehaviorEngine.js";
 
-const {
-  runMetaDemo,
-  runMetaLive,
-} = require("../engine/MetaBehaviorEngine");
+export const metaHealth = (req, res) => {
+  return res.json({ ok: true, engine: "Meta Behavior Engine", status: "running" });
+};
 
-// DEMO
-async function handleMetaDemo(req, res, next) {
+export const metaDemo = async (req, res) => {
   try {
-    const result = await runMetaDemo();
-    res.json({
-      ok: true,
-      engine: "meta",
-      mode: "demo",
-      result,
-    });
+    const result = await MetaBehaviorEngine.demo();
+    return res.json({ ok: true, mode: "demo", result });
   } catch (err) {
-    console.error("META DEMO ERROR:", err);
-    next(err);
+    return res.status(500).json({ ok: false, error: err.message });
   }
-}
+};
 
-// LIVE
-async function handleMetaLive(req, res, next) {
+export const metaLive = async (req, res) => {
   try {
-    // هرچی از فرانت می‌فرستی میاد تو body
     const payload = req.body || {};
-
-    const result = await runMetaLive(payload);
-
-    res.json({
-      ok: true,
-      engine: "meta",
-      mode: "live",
-      input: payload,
-      result,
-    });
+    const result = await MetaBehaviorEngine.live(payload);
+    return res.json({ ok: true, mode: "live", result });
   } catch (err) {
-    console.error("META LIVE ERROR:", err);
-    next(err);
+    return res.status(500).json({ ok: false, error: err.message });
   }
-}
-
-module.exports = {
-  handleMetaDemo,
-  handleMetaLive,
 };
