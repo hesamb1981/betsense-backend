@@ -1,42 +1,31 @@
 import express from "express";
 import cors from "cors";
 
-// ---- ROUTES ----
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
-import metaRoutes from "./routes/metaRoutes.js";
+// ROUTES
+import nsiRoutes from "./engine-nsi/nsiRoutes.js";
+import rbsRoutes from "./engine-rbs/rbsRoutes.js";
+import metaRoutes from "./meta/metaRoutes.js";
 
 const app = express();
-
-// ---- MIDDLEWARE ----
 app.use(cors());
 app.use(express.json());
 
-// ---- HEALTH ROOT ----
+// HEALTH CHECK
 app.get("/", (req, res) => {
-  res.json({
-    ok: true,
-    service: "BetSense Ultra Backend",
-    routes: ["/api/nsi", "/api/rbs", "/api/meta"],
-  });
+  res.json({ ok: true, status: "Backend Running" });
 });
 
-// ---- API ROUTES ----
+// ENGINES
 app.use("/api/nsi", nsiRoutes);
 app.use("/api/rbs", rbsRoutes);
 app.use("/api/meta", metaRoutes);
 
-// ---- 404 HANDLER ----
+// NOT FOUND (global)
 app.use((req, res) => {
-  res.status(404).json({
-    ok: false,
-    error: "Not found",
-    path: req.originalUrl || null,
-  });
+  res.status(404).json({ error: "Not Found" });
 });
 
-// ---- START SERVER ----
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("BetSense backend running on port", PORT);
+  console.log("Server running on port", PORT);
 });
