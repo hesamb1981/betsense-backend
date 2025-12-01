@@ -1,24 +1,30 @@
 // routes/metaRoutes.js
-// Routes for Meta Behavior Engine (CommonJS)
+// META BEHAVIOR ENGINE – ROUTES
 
 const express = require("express");
-const metaController = require("../controllers/metaController");
-
 const router = express.Router();
 
-// Health برای متا
+const metaController = require("../controllers/metaController");
+
+// -----------------------------
+// HEALTH CHECK
+// -----------------------------
 router.get("/health", (req, res) => {
   res.json({
     ok: true,
     engine: "Meta-Behavior",
-    status: "Meta routes ready",
+    status: "Routes OK",
   });
 });
 
-// DEMO endpoint – GET /api/meta/demo
+// -----------------------------
+// DEMO
+// -----------------------------
 router.get("/demo", metaController.demo);
 
-// LIVE endpoint – GET /api/meta/live
+// -----------------------------
+// LIVE
+// -----------------------------
 router.get("/live", metaController.live);
 
 module.exports = router;
