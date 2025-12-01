@@ -1,26 +1,18 @@
-// routes.js  (ROOT of betsense-backend)
+// routes/metaRoutes.js
 
 const express = require("express");
 const router = express.Router();
+const {
+  handleMetaDemo,
+  handleMetaLive,
+} = require("../controllers/metaController");
 
-// ===== زیرروت‌های قبلی =====
-const dataspineRoutes = require("./routes/dataspineRoutes");
-const nsiRoutes = require("./routes/nsiRoutes");
-const rbsRoutes = require("./routes/rbsRoutes");
-const geniusRoutes = require("./routes/geniusRoutes");
-const emotionRoutes = require("./routes/emotionRoutes");
+// هم GET و هم POST رو می‌گیریم که از هر دو طرف کار کنه
 
-// ===== متا =====
-const metaRoutes = require("./routes/metaRoutes");
+// /api/meta-demo
+router.all("/meta-demo", handleMetaDemo);
 
-// هرکدوم از این روترها، خودشون مسیر خودشون رو تعریف می‌کنن
-router.use("/", dataspineRoutes);
-router.use("/", nsiRoutes);
-router.use("/", rbsRoutes);
-router.use("/", geniusRoutes);
-router.use("/", emotionRoutes);
-
-// متا
-router.use("/", metaRoutes);
+// /api/meta-live
+router.all("/meta-live", handleMetaLive);
 
 module.exports = router;
