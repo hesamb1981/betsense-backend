@@ -1,43 +1,47 @@
-// server.js
+import express from "express";
+import cors from "cors";
 
-const express = require("express");
-const cors = require("cors");
+// --------------------
+// Import ALL engines
+// --------------------
+import routes from "./routes/index.js"; // NSI - RBS - Emotion - Genius - Fusion
 
-const routes = require("./routes"); // روت‌های قدیمی (NSI, RBS, Genius, Emotion و ...)
-
-const metaController = require("./controllers/metaController");
+// META (new engine)
+import metaRoutes from "./engine/meta/metaRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Health check اصلی
+// ---------------------------
+// MAIN HEALTH
+// ---------------------------
 app.get("/", (req, res) => {
-  res.json({ ok: true, status: "Backend Running" });
+  res.json({ ok: true, status: "BetSense Backend Running" });
 });
 
-// تمام روت‌های قبلی (NSI, RBS, Emotion, Genius) زیر /api
+// ---------------------------
+// OLD ENGINES
+// ---------------------------
 app.use("/api", routes);
 
-// -----------------------------
-// META BEHAVIOR – مستقیم روی سرور
-// -----------------------------
+// ---------------------------
+// META ENGINE (Option D)
+// ---------------------------
+app.use("/api/meta", metaRoutes);
 
-// DEMO
-app.get("/api/meta/demo", metaController.demo);
-
-// LIVE
-app.get("/api/meta/live", metaController.live);
-
-// 404 برای بقیه مسیرهایی که پیدا نمی‌شن
+// ---------------------------
+// 404
+// ---------------------------
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-// Start server
+// ---------------------------
+// START SERVER
+// ---------------------------
 app.listen(PORT, () => {
-  console.log(`BetSense backend listening on port ${PORT}`);
+  console.log(`BetSense backend running on port ${PORT}`);
 });
