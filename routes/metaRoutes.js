@@ -1,30 +1,26 @@
-// betsense-backend/routes.js
+// routes.js  (ROOT of betsense-backend)
 
-import express from "express";
-
-import dataspineRoutes from "./routes/dataspineRoutes.js";
-import geniusRoutes from "./routes/geniusRoutes.js";
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
-import metaRoutes from "./routes/metaRoutes.js";
-
+const express = require("express");
 const router = express.Router();
 
-// -------- Engine route groups --------
+// ===== زیرروت‌های قبلی =====
+const dataspineRoutes = require("./routes/dataspineRoutes");
+const nsiRoutes = require("./routes/nsiRoutes");
+const rbsRoutes = require("./routes/rbsRoutes");
+const geniusRoutes = require("./routes/geniusRoutes");
+const emotionRoutes = require("./routes/emotionRoutes");
 
-// DataSpine Engine
-router.use("/dataspine", dataspineRoutes);
+// ===== متا =====
+const metaRoutes = require("./routes/metaRoutes");
 
-// Genius / Emotion Engine
-router.use("/genius", geniusRoutes);
+// هرکدوم از این روترها، خودشون مسیر خودشون رو تعریف می‌کنن
+router.use("/", dataspineRoutes);
+router.use("/", nsiRoutes);
+router.use("/", rbsRoutes);
+router.use("/", geniusRoutes);
+router.use("/", emotionRoutes);
 
-// NSI Engine
-router.use("/nsi", nsiRoutes);
+// متا
+router.use("/", metaRoutes);
 
-// RBS Engine
-router.use("/rbs", rbsRoutes);
-
-// Meta Behavior Engine  🔥
-router.use("/meta", metaRoutes);
-
-export default router;
+module.exports = router;
