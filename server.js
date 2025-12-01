@@ -1,46 +1,34 @@
-// server.js  (ESM Compatible)
+// server.js
 
-import express from "express";
-import cors from "cors";
+const express = require("express");
+const cors = require("cors");
 
-import routes from "./routes/index.js";     // روت‌های قدیمی
-import metaController from "./controllers/metaController.js";
+// 👇 حتماً فایل routes.js (و نه پوشه routes/) را لود می‌کنیم
+const routes = require("./routes.js");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// -------------------------
+// -----------------
 // Middleware
-// -------------------------
+// -----------------
 app.use(cors());
 app.use(express.json());
 
-// Root health check
+// Health check اصلی
 app.get("/", (req, res) => {
   res.json({ ok: true, status: "Backend Running" });
 });
 
-// -------------------------
-// OLD ROUTES (NSI, RBS, Genius, Emotion)
-// -------------------------
+// تمام روت‌های API زیر /api
 app.use("/api", routes);
 
-// -------------------------
-// META BEHAVIOR – DIRECT
-// -------------------------
-app.get("/api/meta/demo", metaController.demo);
-app.get("/api/meta/live", metaController.live);
-
-// -------------------------
-// 404
-// -------------------------
+// 404 برای هر مسیری که پیدا نشه
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-// -------------------------
-// START SERVER
-// -------------------------
+// Start server
 app.listen(PORT, () => {
   console.log(`BetSense backend listening on port ${PORT}`);
 });
