@@ -1,31 +1,44 @@
-// controllers/dataspineController.js
+// betsense-backend/controllers/dataspineController.js
 import DataSpineEngine from "../engine/DataSpineEngine.js";
 
-export const dataspineStatus = (req, res) => {
-  return res.json({
+// فقط برای سلامت ساده
+export const dataspineHealth = (req, res) => {
+  res.json({
     ok: true,
     engine: "DataSpine",
-    message: "DataSpine controller is working",
+    message: "DataSpine health OK",
   });
 };
 
+// دموی ساده‌ی DataSpine – بعداً می‌توانیم از خود Engine استفاده کنیم
+export const dataspineDemo = (req, res) => {
+  // اینجا فعلاً یک جواب نمونه می‌دهیم
+  // بعداً می‌توانیم این را به متد واقعی DataSpineEngine وصل کنیم
+  res.json({
+    ok: true,
+    engine: "DataSpine",
+    mode: "demo",
+    summary: "Sample DataSpine demo response",
+    metrics: {
+      momentumScore: 78,
+      volatilityIndex: 21,
+      pressureBias: "home",
+      patternCluster: "late-comeback-risk",
+    },
+  });
+};
+
+// فعلاً برای تست، analyze هم همین دمو را برمی‌گرداند
 export const dataspineAnalyze = (req, res) => {
-  try {
-    // ورودی‌ها بعداً از UI ارسال می‌شود
-    const input = req.body || {};
+  res.json({
+    ok: true,
+    engine: "DataSpine",
+    mode: "analyze-demo",
+  });
+};
 
-    const result = DataSpineEngine.analyze(input);
-
-    return res.json({
-      ok: true,
-      engine: "DataSpine",
-      mode: "live",
-      result,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      ok: false,
-      error: err.message,
-    });
-  }
+export default {
+  dataspineHealth,
+  dataspineDemo,
+  dataspineAnalyze,
 };
