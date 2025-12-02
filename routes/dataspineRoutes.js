@@ -3,6 +3,15 @@ import express from "express";
 
 const router = express.Router();
 
+// ✅ Health check برای DataSpine
+router.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    engine: "DataSpine",
+    status: "DataSpine route is healthy",
+  });
+});
+
 // تست ساده برای این‌که ببینیم بک‌اند و روت دیتاسپاین سالمه
 router.get("/status", (req, res) => {
   res.json({
