@@ -1,29 +1,20 @@
 // betsense-backend/routes/dataspineRoutes.js
 import express from "express";
+import {
+  dataspineHealth,
+  dataspineDemo,
+  dataspineAnalyze,
+} from "../controllers/dataspineController.js";
 
 const router = express.Router();
 
-// Health check برای DataSpine
-router.get("/health", (req, res) => {
-  res.json({
-    ok: true,
-    engine: "DataSpine",
-    message: "DataSpine health OK",
-  });
-});
+// چک سلامت
+router.get("/health", dataspineHealth);
 
-// تست ساده‌ی analyze (فعلاً دمو)
-router.post("/analyze", (req, res) => {
-  const { matchId } = req.body || {};
+// دموی ساده (GET)
+router.get("/demo", dataspineDemo);
 
-  res.json({
-    ok: true,
-    engine: "DataSpine",
-    mode: "analyze-demo",
-    received: {
-      matchId: matchId || null,
-    },
-  });
-});
+// نقطه‌ی analyze (فعلاً مثل دمو جواب می‌دهد)
+router.post("/analyze", dataspineAnalyze);
 
 export default router;
