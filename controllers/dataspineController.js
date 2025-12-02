@@ -1,53 +1,31 @@
 // controllers/dataspineController.js
+import DataSpineEngine from "../engine/DataSpineEngine.js";
 
-// DataSpine Controller
-// فقط هندلرهای ساده که فعلاً بدون هیچ انجینی کار کنن.
-// مهم اینه که اسم اکسپورت‌ها با روترها یکی باشه، تا دیپلوی ارور نده.
-
-/**
- * Health check برای DataSpine
- * GET /api/dataspine/health
- */
-export const dataspineHealthCheck = (req, res) => {
+export const dataspineStatus = (req, res) => {
   return res.json({
     ok: true,
     engine: "DataSpine",
-    status: "healthy",
-    timestamp: new Date().toISOString(),
+    message: "DataSpine controller is working",
   });
 };
 
-/**
- * Demo endpoint برای DataSpine
- * GET /api/dataspine/demo
- */
-export const dataspineDemo = (req, res) => {
-  const samplePayload = {
-    ok: true,
-    engine: "DataSpine",
-    mode: "demo",
-    description: "Sample DataSpine response for demo/testing.",
-    sampleMetrics: {
-      marketsCovered: 128,
-      seasonsAnalyzed: 12,
-      eventsPerMinute: 45,
-    },
-  };
+export const dataspineAnalyze = (req, res) => {
+  try {
+    // ورودی‌ها بعداً از UI ارسال می‌شود
+    const input = req.body || {};
 
-  return res.json(samplePayload);
-};
+    const result = DataSpineEngine.analyze(input);
 
-/**
- * Live endpoint (در صورت نیاز روتر ازش استفاده کند)
- * GET /api/dataspine/live
- * فعلاً یه خروجی ساده می‌دهد تا فقط سرور بالا بیاید.
- */
-export const dataspineLive = (req, res) => {
-  return res.json({
-    ok: true,
-    engine: "DataSpine",
-    mode: "live-placeholder",
-    message:
-      "DataSpine live endpoint is wired correctly. Replace with real logic when ready.",
-  });
+    return res.json({
+      ok: true,
+      engine: "DataSpine",
+      mode: "live",
+      result,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: err.message,
+    });
+  }
 };
