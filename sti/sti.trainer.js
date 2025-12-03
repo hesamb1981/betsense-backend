@@ -1,10 +1,10 @@
 // sti/sti.trainer.js
-// --------------------------
-// Self-Training Intelligence (STI) Trainer for AOIE
-// مسئول:
-// - لود و سیو کردن sti.weights.json
-// - آپدیت وزن‌ها بر اساس correctnessScore
-// - برگرداندن نسخه جدید و وزن‌های جدید
+// ------------------------------------
+// Self-Training Intelligence (STI) Trainer برای AOIE
+// این ماژول:
+//  - sti.weights.json را لود و سیو می‌کند
+//  - وزن‌ها را بر اساس correctnessScore آپدیت می‌کند
+//  - هم default export دارد، هم named export
 
 import fs from "fs";
 import path from "path";
@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 
 const WEIGHTS_PATH = path.join(__dirname, "sti.weights.json");
 
-// اگر فایل وجود نداشت یا خراب بود، این ساختار دیفالت را برمی‌گردانیم
+// اگر فایل خراب یا نبود، این حالت دیفالت را داریم
 function getDefaultWeights() {
   return {
     version: 1,
@@ -37,9 +37,11 @@ function loadWeights() {
     }
     const raw = fs.readFileSync(WEIGHTS_PATH, "utf8");
     const parsed = JSON.parse(raw);
+
     if (!parsed || typeof parsed !== "object") {
       return getDefaultWeights();
     }
+
     if (!parsed.weights) {
       parsed.weights = getDefaultWeights().weights;
     }
@@ -49,6 +51,7 @@ function loadWeights() {
     if (typeof parsed.version !== "number") {
       parsed.version = 1;
     }
+
     return parsed;
   } catch (err) {
     console.error("STI Trainer: error loading weights:", err);
@@ -67,63 +70,105 @@ function saveWeights(data) {
   }
 }
 
-// --------------------------
-// تابع اصلی آموزش AOIE
-// --------------------------
-export function trainAoieSti({ matchId, correctnessScore }) {
-  const cleanScore =
-    typeof correctnessScore === "number" && isFinite(correctnessScore)
-      ? Math.min(1, Math.max(0, correctnessScore))
-      : 0.5;
+class AoieStiTrainer {
+  constructor() {
+    this.state = loadWeights();
+  }
 
-  const data = loadWeights();
+  refresh() {
+    this.state = loadWeights();
+  }
 
-  // جهت اصلاح:
-  // اگر مدل بد کار کرده (score کم) → باید وزن‌ها را تقویت کنیم (delta مثبت)
-  // اگر مدل خیلی خوب بوده (score بالا) → تغییر خیلی کم
-  const delta = (0.5 - cleanScore) * 0.2; // رنج حدود -0.1 تا +0.1
+  getWeights() {
+    if (!this.state) {
+      this.state = loadWeights();
+    }
+    return {
+      version: this.state.version,
+      weights: this.state.weights
+    };
+  }
 
-  const newWeights = { ...data.weights };
-  Object.keys(newWeights).forEach((key) => {
-    const oldVal = Number(newWeights[key]) || 1.0;
-    let updated = oldVal + delta;
-    // محدودیت منطقی برای انفجار نکردن وزن‌ها
-    if (updated < 0.1) updated = 0.1;
-    if (updated > 5.0) updated = 5.0;
-    newWeights[key] = Number(updated.toFixed(4));
-  });
+  /**
+   * @param {Object} params
+   * @param {string} params.matchId
+   * @param {number} params.correctnessScore  عدد بین 0 و 1
+   */
+  train({ matchId, correctnessScore }) {
+    const cleanScore =
+      typeof correctnessScore === "number" && isFinite(correctnessScore)
+        ? Math.min(1, Math.max(0, correctnessScore))
+        : 0.5;
 
-  const newVersion = (Number(data.version) || 1) + 1;
+    const data = this.state || loadWeights();
 
-  const historyItem = {
-    matchId: matchId || "UNKNOWN",
-    correctnessScore: cleanScore,
-    delta,
-    appliedAt: new Date().toISOString()
-  };
+    // اگر مدل بد کار کرده (score پایین) → delta مثبت (وزن‌ها تقویت شوند)
+    // اگر خیلی خوب بوده → delta نزدیک صفر
+    const delta = (0.5 - cleanScore) * 0.2; // رنج تقریبی -0.1 تا +0.1
 
-  const newData = {
-    version: newVersion,
-    weights: newWeights,
-    history: [...data.history, historyItem].slice(-500) // حداکثر ۵۰۰ رکورد آخر
-  };
+    const newWeights = { ...data.weights };
 
-  const saved = saveWeights(newData);
+    Object.keys(newWeights).forEach((key) => {
+      const oldVal = Number(newWeights[key]) || 1.0;
+      let updated = oldVal + delta;
 
-  return {
-    ok: saved,
-    version: newVersion,
-    weights: newWeights,
-    delta,
-    lastUpdate: historyItem
-  };
+      // محدود کردن برای جلوگیری از انفجار / صفر شدن
+      if (updated < 0.1) updated = 0.1;
+      if (updated > 5.0) updated = 5.0;
+
+      newWeights[key] = Number(updated.toFixed(4));
+    });
+
+    const newVersion = (Number(data.version) || 1) + 1;
+
+    const historyItem = {
+      matchId: matchId || "UNKNOWN",
+      correctnessScore: cleanScore,
+      delta,
+      appliedAt: new Date().toISOString()
+    };
+
+    const newData = {
+      version: newVersion,
+      weights: newWeights,
+      history: [...data.history, historyItem].slice(-500) // فقط ۵۰۰ رکورد آخر
+    };
+
+    const saved = saveWeights(newData);
+
+    if (saved) {
+      this.state = newData;
+      return {
+        ok: true,
+        version: newVersion,
+        weights: newWeights,
+        delta,
+        lastUpdate: historyItem
+      };
+    } else {
+      return {
+        ok: false,
+        error: "SAVE_FAILED",
+        version: data.version,
+        weights: data.weights
+      };
+    }
+  }
 }
 
-// برای آینده اگر خواستیم از بیرون وزن‌ها را ببینیم
+const trainer = new AoieStiTrainer();
+
+// ---------- named exports ----------
+export function trainAoieSti(args) {
+  return trainer.train(args);
+}
+
 export function getAoieStiWeights() {
-  const data = loadWeights();
-  return {
-    version: data.version,
-    weights: data.weights
-  };
+  return trainer.getWeights();
 }
+
+// ---------- default export (برای aoieController فعلی) ----------
+export default {
+  train: trainer.train.bind(trainer),
+  getWeights: trainer.getWeights.bind(trainer)
+};
