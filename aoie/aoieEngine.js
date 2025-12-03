@@ -1,9 +1,8 @@
 // aoie/aoieEngine.js
 // --------------------
 // BetSense AOIE - Anti-Outcome Intelligence Engine (Bet Shops Edition)
-// این فایل مغز اصلی محاسبات AOIE است.
-// فعلاً نسخه ساده / اسکلت است، ولی ساختار نهایی را دارد
-// و بعداً فقط کافیست منطق داخلی را هوشمندتر کنیم.
+// نسخه تقویت‌شده: شامل محاسبه GDI / TPS / FPS / CRI / SRI
+// + سیگنال‌های Anti-Outcome در سطح هر انتخاب (selection)
 
 // --------------------
 // 1) کمک‌تابع‌ها (Utilities)
@@ -27,7 +26,7 @@ function safePercent(part, total) {
 }
 
 /**
- * نرمال‌سازی یک مقدار به بازه 0 تا 100
+ * نرمال‌سازی عدد به بازه 0 تا 100
  */
 function normalize(value, min, max) {
   if (max === min) return 0;
@@ -36,7 +35,55 @@ function normalize(value, min, max) {
 }
 
 // --------------------
-// 2) تابع اصلی محاسبه AOIE
+// 2) تحلیل تیکت‌ها برای کشف شارپ / پابلیک
+// --------------------
+
+/**
+ * tickets = [
+ *   {
+ *     ticketId: "T1",
+ *     time: "2025-01-05T17:55:00Z",
+ *     marketId: "MKT-OU-2_5",
+ *     selection: "OVER",
+ *     stake: 20000,
+ *     customerSegment: "vip" | "sharp" | "public"
+ *   }
+ * ]
+ */
+function aggregateTicketsByMarket(tickets = []) {
+  const map = new Map();
+
+  tickets.forEach((t) => {
+    const marketId = t.marketId;
+    if (!marketId) return;
+
+    const key = marketId;
+    if (!map.has(key)) {
+      map.set(key, {
+        totalStake: 0,
+        sharpStake: 0,
+        publicStake: 0
+      });
+    }
+
+    const entry = map.get(key);
+    const stake = Number(t.stake || 0);
+
+    entry.totalStake += stake;
+
+    const seg = (t.customerSegment || "").toLowerCase();
+    if (seg === "sharp" || seg === "vip") {
+      entry.sharpStake += stake;
+    } else {
+      entry.publicStake += stake;
+    }
+  });
+
+  return map;
+}
+
+// --------------------
+// 3) تابع اصلی محاسبه AOIE
 // --------------------
 
 /**
@@ -47,108 +94,112 @@ function normalize(value, min, max) {
  * @param {Object[]} input.markets        - آرایه مارکت‌ها برای این مسابقه
  * @param {Object} input.dataspin         - فیچرهای مخصوص DataSpin (TIS, NEM, BES, SFI)
  * @param {Object[]} input.tickets        - تیکت‌های اخیر برای این مسابقه (اختیاری)
- *
- * ساختار پیشنهادی:
- *
- * match = {
- *   matchId: "M-ARS-TOT-2025-12-02",
- *   league: "EPL",
- *   kickoffTime: "2025-12-02T20:00:00Z"
- * }
- *
- * markets = [
- *   {
- *     marketId: "MKT-1X2-90",
- *     marketCode: "1X2",
- *     line: "FT",
- *     odds: { HOME: 2.10, DRAW: 3.40, AWAY: 3.50 },
- *     stakes: { HOME: 82000, DRAW: 15000, AWAY: 67000 }
- *   },
- *   {
- *     marketId: "MKT-OU-2_5",
- *     marketCode: "OU",
- *     line: "2.5",
- *     odds: { OVER: 1.90, UNDER: 1.95 },
- *     stakes: { OVER: 91000, UNDER: 22000 }
- *   }
- * ]
- *
- * dataspin = {
- *   tisScore: 78,
- *   tisPatternType: "late_flip",
- *   nonEventPressureScore: 65,
- *   behaviorEntropyHome: 52,
- *   behaviorEntropyAway: 61,
- *   matchChaosIndex: 58,
- *   clubSfiHome: 47,
- *   clubSfiAway: 72
- * }
- *
- * tickets = [ ... ]
  */
 export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
-  // 1) محاسبه یک سری متغیر کلی برای کل مسابقه
+  // 1) دیتای DataSpin (اگر نباشد، مقدار پیش‌فرض می‌گذاریم)
   const {
-    tisScore = 50,
-    nonEventPressureScore = 50,
-    matchChaosIndex = 50,
-    clubSfiHome = 50,
-    clubSfiAway = 50
+    tisScore = 50,              // Temporal Inversion Signature
+    tisPatternType = "neutral",
+    nonEventPressureScore = 50, // NEM
+    behaviorEntropyHome = 50,   // BES home
+    behaviorEntropyAway = 50,   // BES away
+    matchChaosIndex = 50,       // مجموع هرج‌ومرج رفتاری
+    clubSfiHome = 50,           // SFI home
+    clubSfiAway = 50            // SFI away
   } = dataspin || {};
 
-  // شاخص شکنندگی میانگین دو تیم
-  const avgSfi = (Number(clubSfiHome || 0) + Number(clubSfiAway || 0)) / 2 || 0;
+  const avgSfi =
+    (Number(clubSfiHome || 0) + Number(clubSfiAway || 0)) / 2 || 0;
 
-  // 2) روی مارکت‌ها حلقه می‌زنیم و برای هر مارکت TPS/FPS/CRI/SRI را حساب می‌کنیم
+  const avgBehaviorEntropy =
+    (Number(behaviorEntropyHome || 0) + Number(behaviorEntropyAway || 0)) / 2 ||
+    0;
+
+  // 2) تحلیل تیکت‌ها برای کشف فشار شارپ / پابلیک
+  const ticketAggByMarket = aggregateTicketsByMarket(tickets);
+
+  // 3) محاسبه امتیازها برای هر مارکت
   const marketResults = markets.map((mkt) => {
     const stakes = mkt.stakes || {};
     const odds = mkt.odds || {};
 
-    const stakeValues = Object.values(stakes).map(Number).filter(v => !isNaN(v));
-    const totalStake = stakeValues.reduce((sum, v) => sum + v, 0);
+    const stakeValues = Object.values(stakes)
+      .map(Number)
+      .filter((v) => !isNaN(v));
 
+    const totalStake = stakeValues.reduce((sum, v) => sum + v, 0);
     const maxStake = stakeValues.length ? Math.max(...stakeValues) : 0;
     const minStake = stakeValues.length ? Math.min(...stakeValues) : 0;
     const stakeSpread = maxStake - minStake;
+    const concentration =
+      totalStake > 0 ? (maxStake / totalStake) * 100 : 0; // % تمرکز روی قوی‌ترین outcome
+
+    // داده تیکت‌ها برای این مارکت
+    const ticketAgg = ticketAggByMarket.get(mkt.marketId) || {
+      totalStake: 0,
+      sharpStake: 0,
+      publicStake: 0
+    };
+
+    const sharpPercent = safePercent(
+      ticketAgg.sharpStake,
+      ticketAgg.totalStake
+    );
+    const publicPercent = safePercent(
+      ticketAgg.publicStake,
+      ticketAgg.totalStake
+    );
 
     // -----------------------------
     // Trap Pattern Score (TPS)
     // -----------------------------
-    const tpsBase = (nonEventPressureScore * 0.4)
-      + normalize(stakeSpread, 0, totalStake || 1) * 0.4
-      + avgSfi * 0.2;
+    // non-event + تمرکز استیک + SFI + فشار شارپ
+    const tpsBase =
+      nonEventPressureScore * 0.3 +
+      normalize(stakeSpread, 0, totalStake || 1) * 0.3 +
+      avgSfi * 0.2 +
+      sharpPercent * 0.2;
 
     const tps = clampScore(tpsBase);
 
     // -----------------------------
     // False Pressure Score (FPS)
     // -----------------------------
-    const fpsBase = (matchChaosIndex * 0.4)
-      + normalize(stakeSpread, 0, totalStake || 1) * 0.4
-      + (100 - Math.abs(tisScore - 50)) * 0.2;
+    // chaos + تمرکز استیک + (mid TIS) + فشار پابلیک
+    const tisMidness = 100 - Math.abs(tisScore - 50); // هرچه به 50 نزدیک‌تر، بالاتر
+    const fpsBase =
+      matchChaosIndex * 0.3 +
+      concentration * 0.25 +
+      tisMidness * 0.2 +
+      publicPercent * 0.25;
 
     const fps = clampScore(fpsBase);
 
     // -----------------------------
     // Collapse Risk Index (CRI)
     // -----------------------------
-    const criBase = (matchChaosIndex * 0.3)
-      + (tisScore * 0.3)
-      + (avgSfi * 0.4);
+    // chaos + TIS + SFI + شارپ
+    const criBase =
+      matchChaosIndex * 0.25 +
+      tisScore * 0.25 +
+      avgSfi * 0.3 +
+      sharpPercent * 0.2;
 
     const cri = clampScore(criBase);
 
     // -----------------------------
     // Sharp Route Intensity (SRI)
     // -----------------------------
-    const sriBase = (tisScore * 0.4)
-      + (nonEventPressureScore * 0.3)
-      + normalize(stakeSpread, 0, totalStake || 1) * 0.3;
+    // TIS + non-event + sharp-percent
+    const sriBase =
+      tisScore * 0.4 +
+      nonEventPressureScore * 0.3 +
+      sharpPercent * 0.3;
 
     const sri = clampScore(sriBase);
 
     // -----------------------------
-    // AO Flags
+    // AO Flags (تصمیم نهایی انجین برای این مارکت)
     // -----------------------------
     const aoFlags = [];
 
@@ -162,6 +213,8 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
       aoFlags.push("AO_WATCH");
     }
 
+    // در آینده می‌توان AO_HEDGE هم اضافه کرد.
+
     return {
       matchId: match?.matchId || null,
       marketId: mkt.marketId,
@@ -172,11 +225,15 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
       cri,
       sri,
       aoFlags,
-      totalStake: Number(totalStake.toFixed(2))
+      totalStake: Number(totalStake.toFixed(2)),
+      sharpPercent: Number(sharpPercent.toFixed(2)),
+      publicPercent: Number(publicPercent.toFixed(2))
     };
   });
 
-  // 3) محاسبه GDI (Global Danger Index) برای کل مسابقه
+  // -----------------------------
+  // 4) محاسبه GDI (Global Danger Index) برای کل مسابقه
+  // -----------------------------
   let maxCri = 0;
   let maxTps = 0;
   let maxFps = 0;
@@ -189,10 +246,105 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
     if (m.sri > maxSri) maxSri = m.sri;
   });
 
-  const gdiBase = (maxCri * 0.4) + (maxTps * 0.3) + (maxFps * 0.2) + (maxSri * 0.1);
+  const gdiBase =
+    maxCri * 0.4 + maxTps * 0.3 + maxFps * 0.2 + maxSri * 0.1;
   const gdi = clampScore(gdiBase);
 
-  // 4) خروجی نهایی AOIE برای این مسابقه
+  // -----------------------------
+  // 5) Anti-Outcome Signals (در سطح انتخاب‌ها)
+  // -----------------------------
+  const antiOutcomeSignals = [];
+
+  markets.forEach((mkt) => {
+    const stakes = mkt.stakes || {};
+    const odds = mkt.odds || {};
+    const stakeValues = Object.values(stakes)
+      .map(Number)
+      .filter((v) => !isNaN(v));
+    const totalStake = stakeValues.reduce((sum, v) => sum + v, 0);
+
+    const ticketAgg = ticketAggByMarket.get(mkt.marketId) || {
+      totalStake: 0,
+      sharpStake: 0,
+      publicStake: 0
+    };
+
+    const sharpPercent = safePercent(
+      ticketAgg.sharpStake,
+      ticketAgg.totalStake
+    );
+    const publicPercent = safePercent(
+      ticketAgg.publicStake,
+      ticketAgg.totalStake
+    );
+
+    Object.keys(odds).forEach((selectionCode) => {
+      const selStake = Number(stakes[selectionCode] || 0);
+      const selStakeShare = safePercent(selStake, totalStake);
+
+      // پایه AO براساس TIS + non-event + chaos + SFI
+      let aoProb =
+        tisScore * 0.25 +
+        nonEventPressureScore * 0.25 +
+        matchChaosIndex * 0.2 +
+        avgSfi * 0.3;
+
+      // اگر فشار اصلی از پابلیک باشد (نه شارپ)، احتمال این که outcome "نیاید" بیشتر می‌شود
+      if (publicPercent > sharpPercent + 20 && selStakeShare > 40) {
+        aoProb += 10;
+      }
+
+      // اگر بیشتر استیک از طرف شارپ‌هاست، احتمال فِید کردن outcome کمتر می‌شود
+      if (sharpPercent > publicPercent + 20 && selStakeShare > 40) {
+        aoProb -= 15;
+      }
+
+      // نهایی‌سازی و تبدیل به 0-1
+      aoProb = clampScore(aoProb);
+      const aoProbability = Number((aoProb / 100).toFixed(4));
+
+      // ثبات سیگنال (stability) – وابسته به chaos + SFI
+      const aoStability = clampScore(
+        (100 - matchChaosIndex) * 0.4 + (100 - avgBehaviorEntropy) * 0.3 + (100 - Math.abs(tisScore - 50)) * 0.3
+      );
+
+      const statementBase =
+        aoProb >= 70
+          ? "likely_not_to_happen"
+          : aoProb >= 55
+          ? "leans_not_to_happen"
+          : "uncertain";
+
+      // انتخاب اکشن توصیه‌ای
+      let recommendedAction = "WATCH";
+      if (aoProb >= 75 && aoStability >= 60) {
+        recommendedAction = "LOCK_OR_LIMIT";
+      } else if (aoProb >= 60) {
+        recommendedAction = "LIMIT";
+      }
+
+      antiOutcomeSignals.push({
+        matchId: match?.matchId || null,
+        marketId: mkt.marketId,
+        marketCode: mkt.marketCode,
+        line: mkt.line,
+        selectionCode,
+        aoProbability, // 0.0000 - 1.0000
+        aoStability,   // 0-100
+        statement: statementBase,
+        recommendedAction,
+        meta: {
+          selStakeShare: Number(selStakeShare.toFixed(2)),
+          sharpPercent: Number(sharpPercent.toFixed(2)),
+          publicPercent: Number(publicPercent.toFixed(2))
+        }
+      });
+    });
+  });
+
+  // -----------------------------
+  // 6) خروجی نهایی AOIE برای این مسابقه
+  // -----------------------------
   return {
     match: {
       matchId: match?.matchId || null,
@@ -201,13 +353,16 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
     },
     dataspinSummary: {
       tisScore,
+      tisPatternType,
       nonEventPressureScore,
+      behaviorEntropyHome,
+      behaviorEntropyAway,
       matchChaosIndex,
       clubSfiHome,
       clubSfiAway
     },
     gdi,
     markets: marketResults,
-    antiOutcomeSignals: []
+    antiOutcomeSignals
   };
 }
