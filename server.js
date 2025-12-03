@@ -1,36 +1,31 @@
-// server.js
-// -----------------------------
-// BetSense Backend Main Server
-
 import express from "express";
 import cors from "cors";
 
+// Main API router (existing routes for other engines)
 import routes from "./routes.js";
 
-const aoieRoutes = require("./routes/aoieRoutes.js");
+// AOIE routes (new engine for betting shops)
+import aoieRoutes from "./routes/aoieRoutes.js";
+
 const app = express();
 
+// Basic middleware
 app.use(cors());
 app.use(express.json());
 
-// روت سلامت اصلی بک‌اند
+// Health check for whole backend
 app.get("/", (req, res) => {
-  return res.json({
-    ok: true,
-    status: "Backend Running"
-  });
+  res.json({ ok: true, status: "Backend Running" });
 });
 
-// روت‌های عمومی قبلی (متا، دیتااسپاین، NSI، RBS، Emotion، Genius و ...)
+// Existing engines under /api
 app.use("/api", routes);
 
-// روت‌های مخصوص AOIE (بتینگ‌شاپ‌ها)
+// AOIE engine dedicated routes
 app.use("/api/aoie", aoieRoutes);
 
-const PORT = process.env.PORT || 10000;
-
+// Port & listener
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`BetSense backend running on port ${PORT}`);
 });
-
-export default app;
