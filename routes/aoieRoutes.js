@@ -7,7 +7,7 @@ import {
   aoieHealth,
   aoieTest,
   aoieTrain
-} from "../controllers/aoie/aoieController.js";
+} from "../controllers/aoieController.js";
 
 const router = express.Router();
 
