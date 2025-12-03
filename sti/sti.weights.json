@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "updatedAt": null,
+  "weights": {
+    "gdi": {
+      "cri": 0.4,
+      "tps": 0.3,
+      "fps": 0.2,
+      "sri": 0.1
+    },
+    "marketRisk": {
+      "cri": 0.4,
+      "tps": 0.25,
+      "fps": 0.2,
+      "liability": 0.15
+    },
+    "globalRisk": {
+      "gdi": 0.55,
+      "neds": 0.25,
+      "cmciInverse": 0.2
+    },
+    "aoProbability": {
+      "tisScore": 0.25,
+      "nonEventPressureScore": 0.25,
+      "matchChaosIndex": 0.15,
+      "avgSfi": 0.15,
+      "neds": 0.2,
+      "publicHeavyBoost": 10,
+      "sharpHeavyPenalty": 15
+    }
+  },
+  "learning": {
+    "maxStep": 0.05,
+    "minWeight": 0.05,
+    "maxWeight": 0.6
+  }
+}
