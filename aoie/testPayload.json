@@ -1,0 +1,81 @@
+{
+  "match": {
+    "matchId": "M-ARS-TOT-2025-01-05",
+    "league": "EPL",
+    "kickoffTime": "2025-01-05T18:30:00Z"
+  },
+  "markets": [
+    {
+      "marketId": "MKT-1X2-FT",
+      "marketCode": "1X2",
+      "line": "FT",
+      "odds": {
+        "HOME": 2.05,
+        "DRAW": 3.40,
+        "AWAY": 3.70
+      },
+      "stakes": {
+        "HOME": 94000,
+        "DRAW": 21000,
+        "AWAY": 67000
+      }
+    },
+    {
+      "marketId": "MKT-OU-2_5",
+      "marketCode": "OU",
+      "line": "2.5",
+      "odds": {
+        "OVER": 1.88,
+        "UNDER": 1.95
+      },
+      "stakes": {
+        "OVER": 125000,
+        "UNDER": 42000
+      }
+    }
+  ],
+  "dataspin": {
+    "tisScore": 81,
+    "tisPatternType": "late_flip",
+    "nonEventPressureScore": 69,
+    "behaviorEntropyHome": 55,
+    "behaviorEntropyAway": 62,
+    "matchChaosIndex": 58,
+    "clubSfiHome": 49,
+    "clubSfiAway": 74
+  },
+  "tickets": [
+    {
+      "ticketId": "T1",
+      "time": "2025-01-05T18:05:00Z",
+      "marketId": "MKT-OU-2_5",
+      "selection": "OVER",
+      "stake": 20000,
+      "customerSegment": "vip"
+    },
+    {
+      "ticketId": "T2",
+      "time": "2025-01-05T18:07:00Z",
+      "marketId": "MKT-OU-2_5",
+      "selection": "OVER",
+      "stake": 15000,
+      "customerSegment": "sharp"
+    },
+    {
+      "ticketId": "T3",
+      "time": "2025-01-05T18:10:00Z",
+      "marketId": "MKT-1X2-FT",
+      "selection": "HOME",
+      "stake": 10000,
+      "customerSegment": "public"
+    },
+    {
+      "ticketId": "T4",
+      "time": "2025-01-05T18:12:00Z",
+      "marketId": "MKT-1X2-FT",
+      "selection": "HOME",
+      "stake": 8000,
+      "customerSegment": "public"
+    }
+  ]
+}
