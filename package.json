@@ -1,5 +1,6 @@
 {
   "name": "betsense-backend",
+  "type": "module",
   "version": "1.0.0",
   "description": "Backend API for BetSense",
   "main": "server.js",
