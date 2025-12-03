@@ -1,24 +1,19 @@
-// routes.js  (نسخه‌ی جدید)
+// routes.js (ROOT)
 
-import dataspineRoutes from "./routes/dataspineRoutes.js";
-import metaRoutes from "./routes/metaRoutes.js";
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
-import geniusRoutes from "./routes/geniusRoutes.js";
+// مثل همیشه Express را لود می‌کنیم
+import express from "express";
 
-export default function registerRoutes(app) {
-  // DataSpine Engine – live + historical + anomaly views
-  app.use("/api/dataspine", dataspineRoutes);
+// AOIE Routes را ایمپورت می‌کنیم
+import aoieRoutes from "./routes/aoieRoutes.js";
 
-  // Meta Behavior Engine
-  app.use("/api/meta", metaRoutes);
+const router = express.Router();
 
-  // NSI Engine
-  app.use("/api/nsi", nsiRoutes);
+// مسیر تست روت اصلی
+router.get("/", (req, res) => {
+  res.json({ ok: true, status: "Backend Running" });
+});
 
-  // RBS Engine
-  app.use("/api/rbs", rbsRoutes);
+// اتصال AOIE Engine مسیر
+router.use("/aoie", aoieRoutes);
 
-  // Genius / Emotion Fusion (اگه فعلاً فقط یکی‌ش فعاله، بعداً می‌تونیم عوضش کنیم)
-  app.use("/api/genius", geniusRoutes);
-}
+export default router;
