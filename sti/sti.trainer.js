@@ -1,8 +1,10 @@
 // sti/sti.trainer.js
-// ---------------------------------------------
-// Trainer برای AOIE + STI
-// این ماژول وزن‌ها را از sti.weights.json می‌خواند
-// و بر اساس correctnessScore آن‌ها را کمی اصلاح می‌کند.
+// --------------------------
+// Self-Training Intelligence (STI) Trainer for AOIE
+// مسئول:
+// - لود و سیو کردن sti.weights.json
+// - آپدیت وزن‌ها بر اساس correctnessScore
+// - برگرداندن نسخه جدید و وزن‌های جدید
 
 import fs from "fs";
 import path from "path";
@@ -11,178 +13,117 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const WEIGHTS_FILE = path.join(__dirname, "sti.weights.json");
+const WEIGHTS_PATH = path.join(__dirname, "sti.weights.json");
 
-// وزن‌های پیش‌فرض در صورت نبودن فایل
-const defaultWeights = {
-  version: 1,
-  updatedAt: null,
-  weights: {
-    gdi: { cri: 0.4, tps: 0.3, fps: 0.2, sri: 0.1 },
-    marketRisk: { cri: 0.4, tps: 0.25, fps: 0.2, liability: 0.15 },
-    globalRisk: { gdi: 0.55, neds: 0.25, cmciInverse: 0.2 },
-    aoProbability: {
-      tisScore: 0.25,
-      nonEventPressureScore: 0.25,
-      matchChaosIndex: 0.15,
-      avgSfi: 0.15,
-      neds: 0.2,
-      publicHeavyBoost: 10,
-      sharpHeavyPenalty: 15
-    }
-  },
-  learning: {
-    maxStep: 0.05,
-    minWeight: 0.05,
-    maxWeight: 0.6
-  }
-};
+// اگر فایل وجود نداشت یا خراب بود، این ساختار دیفالت را برمی‌گردانیم
+function getDefaultWeights() {
+  return {
+    version: 1,
+    weights: {
+      ao_base_weight: 1.0,
+      market_confidence_weight: 1.0,
+      risk_weight: 1.0,
+      stability_weight: 1.0,
+      sharpshare_weight: 1.0
+    },
+    history: []
+  };
+}
 
-function loadCurrentWeights() {
+function loadWeights() {
   try {
-    if (!fs.existsSync(WEIGHTS_FILE)) {
-      return { ...defaultWeights };
+    if (!fs.existsSync(WEIGHTS_PATH)) {
+      return getDefaultWeights();
     }
-    const raw = fs.readFileSync(WEIGHTS_FILE, "utf-8");
-    const json = JSON.parse(raw);
-
-    // یک مرج ساده برای اطمینان از کامل بودن ساختار
-    return {
-      version: json.version ?? 1,
-      updatedAt: json.updatedAt ?? null,
-      weights: {
-        gdi: { ...defaultWeights.weights.gdi, ...(json.weights?.gdi || {}) },
-        marketRisk: {
-          ...defaultWeights.weights.marketRisk,
-          ...(json.weights?.marketRisk || {})
-        },
-        globalRisk: {
-          ...defaultWeights.weights.globalRisk,
-          ...(json.weights?.globalRisk || {})
-        },
-        aoProbability: {
-          ...defaultWeights.weights.aoProbability,
-          ...(json.weights?.aoProbability || {})
-        }
-      },
-      learning: {
-        ...defaultWeights.learning,
-        ...(json.learning || {})
-      }
-    };
+    const raw = fs.readFileSync(WEIGHTS_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      return getDefaultWeights();
+    }
+    if (!parsed.weights) {
+      parsed.weights = getDefaultWeights().weights;
+    }
+    if (!Array.isArray(parsed.history)) {
+      parsed.history = [];
+    }
+    if (typeof parsed.version !== "number") {
+      parsed.version = 1;
+    }
+    return parsed;
   } catch (err) {
-    console.error("STI Trainer: error loading weights, using defaults:", err);
-    return { ...defaultWeights };
+    console.error("STI Trainer: error loading weights:", err);
+    return getDefaultWeights();
   }
 }
 
-function saveWeights(config) {
-  const toSave = {
-    version: config.version,
-    updatedAt: config.updatedAt,
-    weights: config.weights,
-    learning: config.learning
+function saveWeights(data) {
+  try {
+    const json = JSON.stringify(data, null, 2);
+    fs.writeFileSync(WEIGHTS_PATH, json, "utf8");
+    return true;
+  } catch (err) {
+    console.error("STI Trainer: error saving weights:", err);
+    return false;
+  }
+}
+
+// --------------------------
+// تابع اصلی آموزش AOIE
+// --------------------------
+export function trainAoieSti({ matchId, correctnessScore }) {
+  const cleanScore =
+    typeof correctnessScore === "number" && isFinite(correctnessScore)
+      ? Math.min(1, Math.max(0, correctnessScore))
+      : 0.5;
+
+  const data = loadWeights();
+
+  // جهت اصلاح:
+  // اگر مدل بد کار کرده (score کم) → باید وزن‌ها را تقویت کنیم (delta مثبت)
+  // اگر مدل خیلی خوب بوده (score بالا) → تغییر خیلی کم
+  const delta = (0.5 - cleanScore) * 0.2; // رنج حدود -0.1 تا +0.1
+
+  const newWeights = { ...data.weights };
+  Object.keys(newWeights).forEach((key) => {
+    const oldVal = Number(newWeights[key]) || 1.0;
+    let updated = oldVal + delta;
+    // محدودیت منطقی برای انفجار نکردن وزن‌ها
+    if (updated < 0.1) updated = 0.1;
+    if (updated > 5.0) updated = 5.0;
+    newWeights[key] = Number(updated.toFixed(4));
+  });
+
+  const newVersion = (Number(data.version) || 1) + 1;
+
+  const historyItem = {
+    matchId: matchId || "UNKNOWN",
+    correctnessScore: cleanScore,
+    delta,
+    appliedAt: new Date().toISOString()
   };
 
-  fs.writeFileSync(WEIGHTS_FILE, JSON.stringify(toSave, null, 2), "utf-8");
+  const newData = {
+    version: newVersion,
+    weights: newWeights,
+    history: [...data.history, historyItem].slice(-500) // حداکثر ۵۰۰ رکورد آخر
+  };
+
+  const saved = saveWeights(newData);
+
+  return {
+    ok: saved,
+    version: newVersion,
+    weights: newWeights,
+    delta,
+    lastUpdate: historyItem
+  };
 }
 
-// تابع کمکی برای clamp کردن وزن‌ها
-function clampWeight(value, min, max) {
-  if (value < min) return min;
-  if (value > max) return max;
-  return Number(value.toFixed(4));
-}
-
-/**
- * trainAoieSti
- * @param {Object} params
- * @param {string} params.matchId - آی‌دی بازی که براش نتیجه داریم (برای لاگ فقط)
- * @param {number} params.correctnessScore - بین 0 و 1
- *        1 = عملکرد عالی AOIE
- *        0.5 = خنثی
- *        0 = عملکرد خیلی بد AOIE
- *
- * خروجی: آبجکت شامل وزن‌های جدید و نسخه جدید
- */
-export function trainAoieSti({ matchId, correctnessScore }) {
-  try {
-    let score = Number(correctnessScore);
-    if (isNaN(score)) score = 0.5;
-    if (score < 0) score = 0;
-    if (score > 1) score = 1;
-
-    const config = loadCurrentWeights();
-    const { learning } = config;
-    const { maxStep, minWeight, maxWeight } = learning;
-
-    // اگر دور و بر 0.5 باشد، تغییر زیادی نمی‌دهیم
-    const deviation = Math.abs(score - 0.5) * 2; // 0..1
-    if (deviation === 0) {
-      return {
-        ok: true,
-        updated: false,
-        reason: "neutral_score",
-        version: config.version
-      };
-    }
-
-    const direction = score > 0.5 ? 1 : -1; // خوب بود → تقویت، بد بود → کاهش
-    const step = maxStep * deviation;
-
-    // فقط روی گروه aoProbability تمرکز می‌کنیم (مغز Anti-Outcome)
-    const ao = { ...config.weights.aoProbability };
-
-    const keysToTune = [
-      "tisScore",
-      "nonEventPressureScore",
-      "matchChaosIndex",
-      "avgSfi",
-      "neds"
-    ];
-
-    keysToTune.forEach((key) => {
-      const current = Number(ao[key] ?? 0);
-      const boostedStep =
-        key === "nonEventPressureScore" || key === "neds"
-          ? step * 1.1
-          : step * 0.9;
-
-      const updated = current + direction * boostedStep;
-      ao[key] = clampWeight(updated, minWeight, maxWeight);
-    });
-
-    // publicHeavyBoost و sharpHeavyPenalty را هم کمی تنظیم می‌کنیم
-    const boost = Number(ao.publicHeavyBoost ?? 10);
-    const penalty = Number(ao.sharpHeavyPenalty ?? 15);
-
-    const boostUpdated =
-      boost + direction * step * (score > 0.5 ? 0.5 : -0.5);
-    const penaltyUpdated =
-      penalty - direction * step * (score > 0.5 ? 0.5 : -0.5);
-
-    ao.publicHeavyBoost = Number(boostUpdated.toFixed(2));
-    ao.sharpHeavyPenalty = Number(penaltyUpdated.toFixed(2));
-
-    config.weights.aoProbability = ao;
-    config.version = (config.version || 1) + 1;
-    config.updatedAt = new Date().toISOString();
-
-    saveWeights(config);
-
-    return {
-      ok: true,
-      updated: true,
-      matchId: matchId || null,
-      version: config.version,
-      updatedAt: config.updatedAt,
-      aoProbability: config.weights.aoProbability
-    };
-  } catch (err) {
-    console.error("STI Trainer: training error:", err);
-    return {
-      ok: false,
-      error: "training_failed"
-    };
-  }
+// برای آینده اگر خواستیم از بیرون وزن‌ها را ببینیم
+export function getAoieStiWeights() {
+  const data = loadWeights();
+  return {
+    version: data.version,
+    weights: data.weights
+  };
 }
