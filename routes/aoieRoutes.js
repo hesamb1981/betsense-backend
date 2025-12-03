@@ -1,17 +1,14 @@
-// routes/aoieRoutes.js
-
-const express = require("express");
-const aoieController = require("../controllers/aoieController");
+import express from "express";
+import { analyzeAOIE } from "../controllers/aoieController.js";
 
 const router = express.Router();
 
-// Health-check برای AOIE روی بک‌اند اصلی
-router.get("/aoie/test", aoieController.testAOIE);
+// تست سلامت
+router.get("/test", (req, res) => {
+  res.json({ ok: true, message: "AOIE Test Route OK" });
+});
 
-// خروجی اصلی AOIE برای بتینگ‌شاپ‌ها (پری‌مچ/لایو)
-router.get("/aoie/predict", aoieController.runAOIE);
+// نقطه تحلیل اصلی
+router.post("/analyze", analyzeAOIE);
 
-// ⭐ نقطه‌ی Self-Training – هر بار صدا بخوره STI یک قدم خودش را آپدیت می‌کند
-router.get("/aoie/train", aoieController.trainAOIE);
-
-module.exports = router;
+export default router;
