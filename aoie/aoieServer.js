@@ -3,7 +3,7 @@
 // BetSense AOIE - Mini API Server for Betting Shops
 // این فایل یک سرور کوچک Express است که مغز AOIE را
 // از aoieEngine.js صدا می‌زند و خروجی را به صورت JSON برمی‌گرداند.
-
+import aoieTestRoute from "./aoieTestRoute.js";
 import express from "express";
 import cors from "cors";
 import { computeAoieScores } from "./aoieEngine.js";
@@ -52,6 +52,7 @@ app.post("/api/aoie/analyse", (req, res) => {
 
 // ----- استارت سرور -----
 // بعداً اگر روی سرور واقعی اجرا شود، از همین‌جا بالا می‌آید.
+app.use("/api/aoie", aoieTestRoute);
 app.listen(PORT, () => {
   console.log(`BetSense AOIE Engine listening on port ${PORT}`);
 });
