@@ -1,31 +1,37 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 
-import aoieRoutes from "./src/routes/aoieRoutes.js";
+// روت‌های اصلی سیستم (NSI، RBS، Fusion و غیره)
+import mainRoutes from "./routes.js";
 
-dotenv.config();
+// روت اختصاصی AOIE
+import aoieRoutes from "./routes/aoieRoutes.js";
+
 const app = express();
 
+// میدل‌ورها
 app.use(cors());
 app.use(express.json());
 
-// ------------------------------
-// TEST ROOT ROUTE
-// ------------------------------
+// روت سلامت اصلی بک‌اند
 app.get("/", (req, res) => {
-  res.json({ ok: true, status: "Backend Running" });
+  res.json({
+    ok: true,
+    status: "Backend Running",
+  });
 });
 
-// ------------------------------
-// AOIE ROUTES
-// ------------------------------
+// روت‌های اصلی BetSense (همون قبلی‌ها)
+app.use("/api", mainRoutes);
+
+// روت‌های AOIE زیر /aoie
 app.use("/aoie", aoieRoutes);
 
-// ------------------------------
-// START SERVER
-// ------------------------------
+// پورت رندر
 const PORT = process.env.PORT || 10000;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+export default app;
