@@ -1,12 +1,15 @@
-import express from "express";
+// routes/aoieRoutes.js
+
+import { Router } from "express";
 import { debugAoie, runAoie } from "../controllers/aoieController.js";
 
-const router = express.Router();
+const router = Router();
 
-// تست ساده برای این که مطمئن شویم روتر AOIE کار می‌کند
+// تست سلامت AOIE
 router.get("/debug", debugAoie);
 
-// این همان روت اصلی است که باید POST روی /aoie/run را هندل کند
+// اجرای AOIE – هم با GET هم با POST کار می‌کند
+router.get("/run", runAoie);
 router.post("/run", runAoie);
 
 export default router;
