@@ -1,25 +1,17 @@
 // routes/aoieRoutes.js
-// -----------------------------
-// AOIE API Routes (Bet Shops Edition)
 
-import express from "express";
-import {
-  aoieHealth,
-  aoieTest,
-  aoieTrain
-} 
-  import aoieController from "../controllers/aoieController.js";
+const express = require("express");
+const aoieController = require("../controllers/aoieController");
+
 const router = express.Router();
 
-// سلامت AOIE
-router.get("/health", aoieHealth);
+// Health-check برای AOIE روی بک‌اند اصلی
+router.get("/aoie/test", aoieController.testAOIE);
 
-// تست AOIE با ورودی دمو
-router.get("/test", aoieTest);
+// خروجی اصلی AOIE برای بتینگ‌شاپ‌ها (پری‌مچ/لایو)
+router.get("/aoie/predict", aoieController.runAOIE);
 
-// آموزش AOIE با STI Trainer
-// مثال:
-//   /api/aoie/train?matchId=M-ARS-TOT-2025-01-05&score=0.2
-router.get("/train", aoieTrain);
+// ⭐ نقطه‌ی Self-Training – هر بار صدا بخوره STI یک قدم خودش را آپدیت می‌کند
+router.get("/aoie/train", aoieController.trainAOIE);
 
-export default router;
+module.exports = router;
