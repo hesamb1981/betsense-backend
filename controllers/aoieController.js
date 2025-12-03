@@ -1,86 +1,60 @@
-import express from "express";
-
-// -------------------------
-// AOIE CONTROLLER FUNCTIONS
-// -------------------------
-
-// فقط برای تست وضعیت
 export const debugAoie = (req, res) => {
-  return res.json({
+  res.json({
     ok: true,
     message: "AOIE Debug Route Active",
     timestamp: new Date().toISOString(),
   });
 };
 
-// پردازش اوودها و ساخت خروجی تحلیلی
 export const runAoie = (req, res) => {
   try {
-    const { matchId, market, odds } = req.body || {};
+    const { matchId, market, odds } = req.body;
 
-    // چک کردن ورودی
-    if (
-      !matchId ||
-      !market ||
-      !odds ||
-      typeof odds.home !== "number" ||
-      typeof odds.draw !== "number" ||
-      typeof odds.away !== "number"
-    ) {
+    // Basic validation
+    if (!matchId || !market || !odds) {
       return res.status(400).json({
         ok: false,
-        error:
-          "Invalid payload. Expected { matchId, market, odds: { home, draw, away } }",
+        error: "Missing parameters: matchId, market, odds are required.",
       });
     }
 
-    // محاسبه احتمال ضمنی از روی اوودها
-    const rawHome = 1 / odds.home;
-    const rawDraw = 1 / odds.draw;
-    const rawAway = 1 / odds.away;
+    const { home, draw, away } = odds;
 
-    const overround = rawHome + rawDraw + rawAway;
-
-    const normHome = rawHome / overround;
-    const normDraw = rawDraw / overround;
-    const normAway = rawAway / overround;
-
+    // Implied probability calculations
     const implied = {
-      home: +(normHome * 100).toFixed(2),
-      draw: +(normDraw * 100).toFixed(2),
-      away: +(normAway * 100).toFixed(2),
-      overround: +((overround - 1) * 100).toFixed(2),
+      home: home ? (1 / home).toFixed(4) : null,
+      draw: draw ? (1 / draw).toFixed(4) : null,
+      away: away ? (1 / away).toFixed(4) : null,
     };
 
-    // یک اسکور ساده برای پایداری مارکت
-    let stabilityTier;
-    if (implied.overround < 3) {
-      stabilityTier = "HIGH";
-    } else if (implied.overround < 6) {
-      stabilityTier = "MEDIUM";
-    } else {
-      stabilityTier = "LOW";
-    }
+    const sum =
+      (implied.home ? +implied.home : 0) +
+      (implied.draw ? +implied.draw : 0) +
+      (implied.away ? +implied.away : 0);
 
-    const response = {
+    const normalized = {
+      home: (implied.home / sum).toFixed(4),
+      draw: (implied.draw / sum).toFixed(4),
+      away: (implied.away / sum).toFixed(4),
+    };
+
+    res.json({
       ok: true,
       matchId,
       market,
-      inputOdds: odds,
+      odds,
       impliedProbabilities: implied,
+      normalizedProbabilities: normalized,
       meta: {
+        processedAt: new Date().toISOString(),
         engine: "AOIE v1.0",
-        stabilityTier,
-        createdAt: new Date().toISOString(),
+        success: true,
       },
-    };
-
-    return res.json(response);
+    });
   } catch (err) {
-    console.error("AOIE run error:", err);
-    return res.status(500).json({
+    res.status(500).json({
       ok: false,
-      error: "AOIE processing error",
+      error: err.message,
     });
   }
 };
