@@ -6,8 +6,8 @@ import express from "express";
 import cors from "cors";
 
 import routes from "./routes.js";
-import aoieRoutes from "./routes/aoieRoutes.js";
 
+const aoieRoutes = require("./routes/aoieRoutes.js");
 const app = express();
 
 app.use(cors());
