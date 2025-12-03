@@ -2,11 +2,12 @@
 // -------------------------------------
 // BetSense AOIE - Anti-Outcome Intelligence Engine (Bet Shops Edition)
 // نسخه متصل به STI: وزن‌ها را از sti/sti.weights.json می‌خواند
-// و در سطح GDI / Market Risk / Global Risk / AO Probability اعمال می‌کند.
+// و هر اجرا را در sti.logger ثبت می‌کند.
 
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { logAoieRun } from "../sti/sti.logger.js";
 
 // --------------------
 // 0) بارگذاری وزن‌ها از STI
@@ -47,7 +48,6 @@ function loadWeights() {
     const w = json.weights || {};
     const l = json.learning || {};
 
-    // یک مرج ساده و ایمن
     return {
       gdi: { ...defaultWeights.gdi, ...(w.gdi || {}) },
       marketRisk: { ...defaultWeights.marketRisk, ...(w.marketRisk || {}) },
@@ -163,14 +163,12 @@ function aggregateTicketsByMarket(tickets = []) {
 }
 
 // --------------------
-// 3) تابع اصلی AOIE با STI
+// 3) تابع اصلی AOIE با STI و Logger
 // --------------------
 
 export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
-  // وزن‌ها را از STI می‌خوانیم (یا از default)
   const W = loadWeights();
 
-  // --- DataSpin features ---
   const {
     tisScore = 50,
     tisPatternType = "neutral",
@@ -239,7 +237,6 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
         sharpPercent * 0.3
     );
 
-    // ---- TPS ----
     const tpsBase =
       nonEventPressureScore * 0.3 +
       normalize(stakeSpread, 0, totalStake || 1) * 0.3 +
@@ -247,7 +244,6 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
       sharpPercent * 0.2;
     const tps = clampScore(tpsBase);
 
-    // ---- FPS ----
     const tisMidness = 100 - Math.abs(tisScore - 50);
     const fpsBase =
       matchChaosIndex * 0.3 +
@@ -256,7 +252,6 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
       publicPercent * 0.25;
     const fps = clampScore(fpsBase);
 
-    // ---- CRI ----
     const criBase =
       matchChaosIndex * 0.25 +
       tisScore * 0.25 +
@@ -264,14 +259,12 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
       sharpPercent * 0.2;
     const cri = clampScore(criBase);
 
-    // ---- SRI ----
     const sriBase =
       tisScore * 0.4 +
       nonEventPressureScore * 0.3 +
       sharpPercent * 0.3;
     const sri = clampScore(sriBase);
 
-    // ---- AO Flags ----
     const aoFlags = [];
     if (cri > 85 || (tps > 80 && fps > 75)) {
       aoFlags.push("AO_LOCK");
@@ -282,7 +275,6 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
       aoFlags.push("AO_WATCH");
     }
 
-    // ---- Market Risk Score بر اساس وزن‌های STI ----
     const mrW = W.marketRisk;
     const marketRiskScore = clampScore(
       cri * (mrW.cri ?? 0.4) +
@@ -461,9 +453,9 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
   });
 
   // -----------------------------
-  // 7) خروجی نهایی
+  // 7) ساخت نتیجه نهایی و Log
   // -----------------------------
-  return {
+  const result = {
     match: {
       matchId: match?.matchId || null,
       league: match?.league || null,
@@ -490,4 +482,13 @@ export function computeAoieScores({ match, markets, dataspin, tickets = [] }) {
     markets: marketResults,
     antiOutcomeSignals
   };
+
+  // لاگ‌کردن این اجرا برای STI
+  logAoieRun({
+    input: { match, markets, dataspin, tickets },
+    output: result,
+    weightsVersion: 1
+  });
+
+  return result;
 }
