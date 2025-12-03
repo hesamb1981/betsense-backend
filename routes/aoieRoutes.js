@@ -1,13 +1,12 @@
-// routes/aoieRoutes.js
 import express from "express";
-import { aoieDebug, aoieAnalyze } from "../controllers/aoieController.js";
+import { debugAoie, runAoie } from "../controllers/aoieController.js";
 
 const router = express.Router();
 
-// ساده: دیباگ AOIE
-router.get("/debug", aoieDebug);
+// تست ساده برای این که مطمئن شویم روتر AOIE کار می‌کند
+router.get("/debug", debugAoie);
 
-// آنالیز اصلی AOIE
-router.post("/analyze", aoieAnalyze);
+// این همان روت اصلی است که باید POST روی /aoie/run را هندل کند
+router.post("/run", runAoie);
 
 export default router;
