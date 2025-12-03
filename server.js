@@ -1,32 +1,31 @@
 import express from "express";
 import cors from "cors";
-import aoieRoutes from "./routes/aoieRoutes.js";
+import dotenv from "dotenv";
 
+import aoieRoutes from "./src/routes/aoieRoutes.js";
+
+dotenv.config();
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// -------------------------
-// ROOT HEALTH CHECK
-// -------------------------
+// ------------------------------
+// TEST ROOT ROUTE
+// ------------------------------
 app.get("/", (req, res) => {
-  res.json({
-    ok: true,
-    status: "Backend Running",
-  });
+  res.json({ ok: true, status: "Backend Running" });
 });
 
-// -------------------------
+// ------------------------------
 // AOIE ROUTES
-// -------------------------
+// ------------------------------
 app.use("/aoie", aoieRoutes);
 
-// -------------------------
+// ------------------------------
 // START SERVER
-// -------------------------
-const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// ------------------------------
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
