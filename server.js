@@ -1,23 +1,21 @@
+// server.js
+// BetSense Backend – Main Server Entry
+
 import express from "express";
 import cors from "cors";
 
-// روت‌های اصلی سیستم BetSense (NSI، RBS، Fusion و بقیه)
+// Routes
 import mainRoutes from "./routes.js";
-
-// روت اختصاصی AOIE (Odds Intelligence Engine)
 import aoieRoutes from "./routes/aoieRoutes.js";
+import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
 
 const app = express();
 
-// --------------------
-// Middleware ها
-// --------------------
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// --------------------
-// روت سلامت اصلی بک‌اند
-// --------------------
+// Health check
 app.get("/", (req, res) => {
   res.json({
     ok: true,
@@ -25,22 +23,16 @@ app.get("/", (req, res) => {
   });
 });
 
-// --------------------
-// روت‌های اصلی BetSense (همون قبلی‌ها)
-// همه‌ی APIهای قبلی زیر /api در دسترس هستن
-// --------------------
+// Main BetSense API routes
 app.use("/api", mainRoutes);
 
-// --------------------
-// روت‌های AOIE زیر /aoie
-// مثال: GET  /aoie/debug
-//        POST /aoie/run
-// --------------------
+// AOIE engine routes
 app.use("/aoie", aoieRoutes);
 
-// --------------------
-// شروع سرور روی Render
-// --------------------
+// Ultra Risk Core engine routes
+app.use("/ultra-risk", ultraRiskRoutes);
+
+// Render port
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
