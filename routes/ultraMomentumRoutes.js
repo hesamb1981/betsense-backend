@@ -1,6 +1,5 @@
 // routes/ultraMasterRoutes.js
-// ULTRA MASTER CORE – Level 4 Orchestrator
-// این هسته، سه Ultra Core را در یک لایه هوشمند ترکیب می‌کند.
+// ULTRA MASTER CORE – orchestrator for Ultra Risk / Momentum / Fusion
 
 import express from "express";
 
@@ -8,7 +7,7 @@ const router = express.Router();
 
 /**
  * ساده‌ترین تست سلامت برای Ultra Master Core
- * URL: GET /ultra/master-core/ping
+ * GET  /ultra/master-core/ping
  */
 router.get("/ultra/master-core/ping", (req, res) => {
   res.json({
@@ -21,135 +20,153 @@ router.get("/ultra/master-core/ping", (req, res) => {
 });
 
 /**
- * دموی تحلیلی پیشرفته برای Ultra Master Core
- * URL: POST /ultra/master-core/analyse
+ * دمو‌ی اصلی Enterprise برای سه موتور:
+ * POST /ultra/master-core/analyse
  *
- * ورودی پیشنهادی (JSON):
+ * ورودی نمونه (نیازی به حفظ کردن نیست – فقط برای تست):
  * {
- *   "matchId": "ABC-123",
- *   "preMatch": {
- *     "homeWinOdds": 2.10,
- *     "drawOdds": 3.40,
- *     "awayWinOdds": 3.60
- *   },
- *   "live": {
- *     "minute": 37,
- *     "currentScore": "1-0",
- *     "pressureIndex": 0.74
- *   },
+ *   "matchId": "LIVE-DEMO-ULTRA-001",
+ *   "preMatch": { "homeWinOdds": 2.05, "drawOdds": 3.30, "awayWinOdds": 3.90 },
+ *   "live": { "minute": 67, "currentScore": "1-1", "pressureIndex": 0.77 },
  *   "bookmaker": {
- *     "liabilityHome": 120000,
- *     "liabilityDraw": 80000,
- *     "liabilityAway": 60000
+ *     "liabilityHome": 185000,
+ *     "liabilityDraw": 92000,
+ *     "liabilityAway": 74000
  *   },
  *   "behavioral": {
- *     "crowdSentiment": 0.68,    // 0 تا 1
- *     "sharpMoneyIndex": 0.81,   // 0 تا 1
- *     "retailPanicIndex": 0.29   // 0 تا 1
+ *     "crowdSentiment": 0.73,
+ *     "sharpMoneyIndex": 0.84,
+ *     "retailPanicIndex": 0.21
  *   }
  * }
  */
 router.post("/ultra/master-core/analyse", (req, res) => {
-  const payload = req.body || {};
+  const body = req.body || {};
 
-  const matchId = payload.matchId || "ULTRA-MASTER-DEMO-001";
+  const matchId = body.matchId || "ULTRA-MASTER-DEMO-001";
 
-  const preMatch = payload.preMatch || {};
-  const live = payload.live || {};
-  const bookmaker = payload.bookmaker || {};
-  const behavioral = payload.behavioral || {};
+  const preMatch = body.preMatch || {};
+  const live = body.live || {};
+  const bookmaker = body.bookmaker || {};
+  const behavioral = body.behavioral || {};
 
-  // --- 1) محاسبه یک Risk Score ساده ولی نمایشی
-  const pressureIndex = live.pressureIndex ?? 0.5;
-  const liabilityTotal =
-    (bookmaker.liabilityHome || 0) +
-    (bookmaker.liabilityDraw || 0) +
-    (bookmaker.liabilityAway || 0);
+  // ---------- ۱) RISK LAYER (Ultra Risk Core) ----------
+  const liabilityHome = Number(bookmaker.liabilityHome || 0);
+  const liabilityDraw = Number(bookmaker.liabilityDraw || 0);
+  const liabilityAway = Number(bookmaker.liabilityAway || 0);
+  const totalLiability = liabilityHome + liabilityDraw + liabilityAway;
 
-  const sharpMoneyIndex = behavioral.sharpMoneyIndex ?? 0.5;
-  const retailPanicIndex = behavioral.retailPanicIndex ?? 0.5;
-  const crowdSentiment = behavioral.crowdSentiment ?? 0.5;
+  // نرمال‌سازی تقریبی روی سقف ۳۰۰k
+  const liabilityPressure = Math.min(totalLiability / 300000, 1);
 
-  // pseudo-risk score بین 0 تا 1
-  const riskScore = Math.min(
-    1,
-    Math.max(
-      0,
-      0.35 * pressureIndex +
-        0.25 * (liabilityTotal > 0 ? 0.7 : 0.3) +
-        0.25 * sharpMoneyIndex +
-        0.15 * retailPanicIndex
-    )
+  const rawPressureIndex = Number(live.pressureIndex ?? 0.5);
+  const inPlayPressure = Math.max(0, Math.min(rawPressureIndex, 1));
+
+  const ultraRiskScore = Number(
+    (0.55 * liabilityPressure + 0.45 * inPlayPressure).toFixed(3)
   );
 
-  // --- 2) محاسبه Momentum Score نمایشی
-  const minute = live.minute || 0;
-  const lateGameBoost = minute >= 75 ? 0.15 : minute >= 60 ? 0.08 : 0;
-  const momentumBase = 0.4 * pressureIndex + 0.3 * crowdSentiment + 0.3 * sharpMoneyIndex;
-  const momentumScore = Math.min(1, momentumBase + lateGameBoost);
+  let ultraRiskBand = "LOW";
+  if (ultraRiskScore >= 0.75) ultraRiskBand = "CRITICAL";
+  else if (ultraRiskScore >= 0.55) ultraRiskBand = "HIGH";
+  else if (ultraRiskScore >= 0.35) ultraRiskBand = "MEDIUM";
 
-  // --- 3) Fusion / Composite Score
-  const fusionScore = Math.min(
-    1,
-    0.45 * riskScore + 0.40 * momentumScore + 0.15 * (1 - retailPanicIndex)
+  // ---------- ۲) MOMENTUM LAYER (Ultra Momentum Core) ----------
+  const minute = Number(live.minute || 0);
+  const currentScore = String(live.currentScore || "0-0");
+  const crowdSentiment = Number(behavioral.crowdSentiment ?? 0.5);
+
+  const isLateGame = minute >= 75;
+  const isTightScore = /\b0-0\b|\b1-0\b|\b0-1\b|\b1-1\b/.test(currentScore);
+
+  let lateGameBoost = 0;
+  if (isLateGame && isTightScore) lateGameBoost = 0.18;
+  else if (isLateGame) lateGameBoost = 0.1;
+
+  const baseMomentumScore = Math.max(
+    0,
+    Math.min(crowdSentiment + lateGameBoost, 1)
   );
 
-  // --- 4) طبقه‌بندی سطح ریسک کلی
-  let globalRiskBand = "MEDIUM";
-  if (fusionScore >= 0.8) globalRiskBand = "AGGRESSIVE_EDGE";
-  else if (fusionScore >= 0.65) globalRiskBand = "CONTROLLED_EDGE";
-  else if (fusionScore <= 0.35) globalRiskBand = "DEFENSIVE";
-  else globalRiskBand = "NEUTRAL";
+  const ultraMomentumScore = Number(baseMomentumScore.toFixed(3));
 
-  // --- 5) ساخت پاسخ نهایی Ultra Master Core
+  let momentumState = "BALANCED";
+  if (ultraMomentumScore >= 0.8) momentumState = "SURGE";
+  else if (ultraMomentumScore >= 0.6) momentumState = "STRONG";
+  else if (ultraMomentumScore <= 0.3) momentumState = "FLAT";
+
+  // ---------- ۳) FUSION LAYER (Ultra Fusion Core) ----------
+  const sharpMoneyIndex = Number(behavioral.sharpMoneyIndex ?? 0.5);
+  const retailPanicIndex = Number(behavioral.retailPanicIndex ?? 0.5);
+
+  const fusionScoreRaw =
+    0.5 * sharpMoneyIndex +
+    0.3 * ultraMomentumScore +
+    0.2 * (1 - retailPanicIndex);
+
+  const ultraFusionScore = Number(Math.max(0, Math.min(fusionScoreRaw, 1)).toFixed(3));
+
+  let fusionSignal = "NEUTRAL_EDGE";
+  if (ultraFusionScore >= 0.82) fusionSignal = "AGGRESSIVE_EDGE";
+  else if (ultraFusionScore >= 0.65) fusionSignal = "POSITIVE_EDGE";
+  else if (ultraFusionScore <= 0.35) fusionSignal = "NO_EDGE";
+
+  // ---------- ۴) MASTER BLEND ----------
+  const masterCompositeScore = Number(
+    (
+      0.45 * ultraFusionScore +
+      0.35 * ultraMomentumScore +
+      0.20 * (1 - ultraRiskScore)
+    ).toFixed(3)
+  );
+
+  let masterLabel = "CONTROLLED";
+  if (masterCompositeScore >= 0.8) masterLabel = "ULTRA_EDGE";
+  else if (masterCompositeScore >= 0.6) masterLabel = "FAVOURABLE";
+  else if (masterCompositeScore <= 0.35) masterLabel = "DISENGAGE";
+
+  // ---------- RESPONSE ----------
   res.json({
     ok: true,
     layer: "ULTRA_MASTER_CORE",
     matchId,
-
-    // خلاصه‌ی مدیریتی برای لایه ۴
-    summary: {
-      globalRiskBand,
-      fusionScore: Number(fusionScore.toFixed(3)),
-      riskScore: Number(riskScore.toFixed(3)),
-      momentumScore: Number(momentumScore.toFixed(3)),
-      comment:
-        "Ultra Master Core – composite signal built from risk, momentum, and behavioral inputs.",
+    engines: {
+      risk: "ULTRA_RISK_CORE",
+      momentum: "ULTRA_MOMENTUM_CORE",
+      fusion: "ULTRA_FUSION_CORE",
     },
-
-    // لایه‌های زیرین – شمایی از سه Ultra Core
-    layers: {
-      ultraRiskCore: {
-        label: "ULTRA_RISK_CORE",
-        riskScore: Number(riskScore.toFixed(3)),
-        notes: [
-          "Integrated bookmaker liability & in-play pressure.",
-          "Designed for shop-level exposure and red-flag games.",
-        ],
-      },
-      ultraMomentumCore: {
-        label: "ULTRA_MOMENTUM_CORE",
-        momentumScore: Number(momentumScore.toFixed(3)),
-        notes: [
-          "Real-time momentum + time-decay logic.",
-          "Late-game boosts around 60-75+ minutes.",
-        ],
-      },
-      ultraFusionCore: {
-        label: "ULTRA_FUSION_CORE",
-        fusionScore: Number(fusionScore.toFixed(3)),
-        notes: [
-          "Blends risk & momentum with behavioral overlays.",
-          "Built as the primary enterprise-grade composite edge.",
-        ],
-      },
+    riskLayer: {
+      band: ultraRiskBand,
+      score: ultraRiskScore,
+      totalLiability,
+      liabilityHome,
+      liabilityDraw,
+      liabilityAway,
+      inPlayPressure,
     },
-
+    momentumLayer: {
+      score: ultraMomentumScore,
+      state: momentumState,
+      minute,
+      currentScore,
+      isLateGame,
+      isTightScore,
+      crowdSentiment,
+    },
+    fusionLayer: {
+      score: ultraFusionScore,
+      signal: fusionSignal,
+      sharpMoneyIndex,
+      retailPanicIndex,
+    },
+    masterComposite: {
+      score: masterCompositeScore,
+      label: masterLabel,
+    },
     meta: {
-      receivedPayloadPreview: payload,
-      liabilityTotal,
-      computedAt: new Date().toISOString(),
-      version: "ULTRA_MASTER_CORE_DEMO_V1",
+      note: "Ultra Master Core composite demo – wiring of Risk / Momentum / Fusion layers is correct.",
+      receivedPayloadPreview: body,
+      timestamp: new Date().toISOString(),
     },
   });
 });
