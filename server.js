@@ -1,16 +1,16 @@
-// server.js
 import express from "express";
 import cors from "cors";
-import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
 
-// روت‌های اصلی BetSense
+// روت‌های اصلی سیستم (NSI، RBS، Meta، Genius و غیره)
 import mainRoutes from "./routes.js";
 
-// روت AOIE Engine
+// روت اختصاصی AOIE
 import aoieRoutes from "./routes/aoieRoutes.js";
 
-// روت Ultra Risk Core
+// روت‌های ابر انجین‌ها (Risk / Momentum / Fusion)
 import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
+import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
+import ultraFusionRoutes from "./routes/super/ultraFusionRoutes.js";
 
 const app = express();
 
@@ -26,16 +26,17 @@ app.get("/", (req, res) => {
   });
 });
 
-// روت‌های اصلی BetSense (NSI, RBS و بقیه وقتی آماده شدند)
+// روت‌های اصلی BetSense (قدیمی‌ها)
 app.use("/api", mainRoutes);
 
-// AOIE Engine
+// روت AOIE زیر /aoie
 app.use("/aoie", aoieRoutes);
 
-// Ultra Risk Core Engine
+// سوپر انجین‌ها
 app.use("/ultra-risk", ultraRiskRoutes);
-
 app.use("/ultra-momentum", ultraMomentumRoutes);
+app.use("/ultra-fusion", ultraFusionRoutes);
+
 // پورت رندر
 const PORT = process.env.PORT || 10000;
 
