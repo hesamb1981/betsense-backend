@@ -24,8 +24,8 @@ app.get("/", (req, res) => {
 // روت‌های اصلی BetSense (همون قبلی‌ها)
 app.use("/api", mainRoutes);
 
-// روت‌های AOIE زیر /aoie
-app.use("/aoie", aoieRoutes);
+// روت‌های AOIE زیر /api/aoie
+app.use("/api/aoie", aoieRoutes);
 
 // پورت رندر
 const PORT = process.env.PORT || 10000;
