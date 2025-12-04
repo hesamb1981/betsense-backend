@@ -1,6 +1,7 @@
 // server.js
 import express from "express";
 import cors from "cors";
+import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
 
 // روت‌های اصلی BetSense
 import mainRoutes from "./routes.js";
@@ -34,6 +35,7 @@ app.use("/aoie", aoieRoutes);
 // Ultra Risk Core Engine
 app.use("/ultra-risk", ultraRiskRoutes);
 
+app.use("/ultra-momentum", ultraMomentumRoutes);
 // پورت رندر
 const PORT = process.env.PORT || 10000;
 
