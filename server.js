@@ -17,6 +17,7 @@ const app = express();
 // میدل‌ورها
 app.use(cors());
 app.use(express.json());
+app.use(require("./routes/superRiskRoutes"));
 
 // روت سلامت اصلی بک‌اند
 app.get("/", (req, res) => {
