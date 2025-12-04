@@ -1,54 +1,55 @@
-export const pingUltraRisk = (req, res) => {
-  res.json({
+// controllers/ultraRiskController.js
+
+export const ultraRiskPing = (req, res) => {
+  return res.json({
     ok: true,
-    engine: "Ultra Risk Core",
+    engine: "ULTRA_RISK_CORE",
     status: "online",
+    message: "Ultra Risk Core controller active",
     timestamp: new Date().toISOString(),
   });
 };
 
-export const runUltraRisk = (req, res) => {
-  try {
-    const { matchId, odds } = req.body;
+// =========================
+//   SAMPLE RISK ENGINE
+//   (initial minimal version)
+// =========================
 
-    if (!matchId || !odds) {
+export const ultraRiskProcess = (req, res) => {
+  try {
+    const { odds } = req.body;
+
+    if (!odds) {
       return res.status(400).json({
         ok: false,
-        error: "matchId and odds are required",
+        error: "Missing odds input",
       });
     }
 
-    const { home, draw, away } = odds;
+    // --- Minimal calculation (will evolve into full engine) ---
+    const impliedHome = 1 / odds.home;
+    const impliedDraw = 1 / odds.draw;
+    const impliedAway = 1 / odds.away;
 
-    const implied = {
-      home: home ? (1 / home).toFixed(4) : null,
-      draw: draw ? (1 / draw).toFixed(4) : null,
-      away: away ? (1 / away).toFixed(4) : null,
-    };
-
-    const sum =
-      (implied.home ? +implied.home : 0) +
-      (implied.draw ? +implied.draw : 0) +
-      (implied.away ? +implied.away : 0);
+    const total = impliedHome + impliedDraw + impliedAway;
 
     const normalized = {
-      home: (implied.home / sum).toFixed(4),
-      draw: (implied.draw / sum).toFixed(4),
-      away: (implied.away / sum).toFixed(4),
+      home: (impliedHome / total).toFixed(4),
+      draw: (impliedDraw / total).toFixed(4),
+      away: (impliedAway / total).toFixed(4),
     };
 
-    res.json({
+    return res.json({
       ok: true,
-      matchId,
-      odds,
-      impliedProbabilities: implied,
+      engine: "ULTRA_RISK_CORE",
+      input: odds,
       normalizedProbabilities: normalized,
-      timestamp: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
     });
   } catch (err) {
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
-      error: err.message,
+      error: "Risk engine internal error",
     });
   }
 };
