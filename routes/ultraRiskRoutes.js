@@ -1,9 +1,18 @@
+// routes/ultraRiskRoutes.js
+// Ultra Risk Core routes (simple ping for now)
+
 import express from "express";
-import { pingUltraRisk, runUltraRisk } from "../controllers/ultraRiskController.js";
 
 const router = express.Router();
 
-router.get("/ping", pingUltraRisk);
-router.post("/run", runUltraRisk);
+// تست سلامت Ultra Risk Core
+router.get("/ping", (req, res) => {
+  res.json({
+    ok: true,
+    engine: "ULTRA_RISK_CORE",
+    message: "Ultra Risk Core route is online",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 export default router;
