@@ -1,31 +1,15 @@
-// routes/superRiskRoutes.js
-// Ultra Risk Core – Execution Route v1.0
+import express from "express";
 
-const express = require("express");
 const router = express.Router();
 
-const {
-  runUltraRiskCore,
-} = require("../engines/super/ultra-risk-core/ultraRiskCoreEngine");
-
-// POST: execute the engine with payload
-router.post("/super/ultra-risk/run", (req, res) => {
-  try {
-    const payload = req.body || {};
-    const result = runUltraRiskCore(payload);
-
-    return res.json({
-      ok: true,
-      engine: "ULTRA_RISK_CORE",
-      result,
-    });
-  } catch (err) {
-    console.error("Ultra Risk Core Error:", err);
-    return res.status(500).json({
-      ok: false,
-      error: "Ultra Risk Core crashed",
-    });
-  }
+// Health check route
+router.get("/super-risk-core", (req, res) => {
+  return res.json({
+    ok: true,
+    engine: "SUPER_RISK_CORE",
+    message: "Super Risk Core route is online",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-module.exports = router;
+export default router;
