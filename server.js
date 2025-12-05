@@ -1,29 +1,30 @@
 import express from "express";
+import cors from "cors";
 
-// Import main super-engine routes
-import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
-import ultraFusionRoutes from "./routes/super/ultraFusionRoutes.js";
+// روت اصلی که همه‌ی مسیرها رو مدیریت می‌کند
+import router from "./routes.js";
 
-// Import test routes
-import intelligenceTestRoutes from "./routes/test/intelligenceTest.js";
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-const router = express.Router();
+// Middlewareها
+app.use(cors());
+app.use(express.json());
 
-// ROOT CHECK
-router.get("/", (req, res) => {
+// استفاده از روتر اصلی
+app.use("/", router);
+
+// یک هلت چک ساده برای اطمینان
+app.get("/health", (req, res) => {
   res.json({
     ok: true,
-    service: "BetSense Ultra Backend Router",
-    message: "Routing system online",
+    service: "BetSense Ultra Backend",
+    message: "Health endpoint OK",
     timestamp: new Date().toISOString()
   });
 });
 
-// Super Engine API Routes
-router.use("/super", intelligenceRoutes);
-router.use("/super", ultraFusionRoutes);
-
-// Test Routes
-router.use("/test", intelligenceTestRoutes);
-
-export default router;
+// شروع سرور
+app.listen(PORT, () => {
+  console.log(`BetSense backend listening on port ${PORT}`);
+});
