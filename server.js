@@ -55,7 +55,7 @@ app.use(geniusRoutes);
 app.use(metaRoutes);
 app.use(nsiRoutes);
 app.use(rbsRoutes);
-
+ 
 // Intelligence Core
 app.use(intelligenceCoreRoutes);
 
