@@ -19,7 +19,7 @@ import superRiskRoutes from "./routes/superRiskRoutes.js";
 // 🔹 Master & Intelligence layers
 import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
 import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
-
+import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -27,6 +27,7 @@ const PORT = process.env.PORT || 10000;
 // Middlewares
 // -------------------------------
 app.use(cors());
+app.use("/super/intelligence-core", intelligenceRoutes);
 app.use(express.json());
 
 // -------------------------------
