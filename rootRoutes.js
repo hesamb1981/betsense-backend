@@ -1,33 +1,33 @@
-// rootRoutes.js
 import express from "express";
 
-// AOIE Engine routes
+// Import routes
 import aoieRoutes from "./routes/aoieRoutes.js";
-
-// TRINITY CORE routes
 import trinityCoreRoutes from "./routes/trinityCoreRoutes.js";
 import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
+
 const router = express.Router();
 
-// Root test route
+// Root check
 router.get("/", (req, res) => {
   res.json({
     ok: true,
-    status: "BetSense Backend Running",
-    services: ["AOIE_ENGINE", "TRINITY_CORE"],
+    status: "Backend Running",
+    services: [
+      "AOIE_ENGINE",
+      "TRINITY_CORE",
+      "ULTRA_MASTER_ENGINE"
+    ],
     timestamp: new Date().toISOString()
   });
 });
 
-// ----------------------
-// REGISTER THE ROUTES
-// ----------------------
-
-// AOIE Engine
+// AOIE
 router.use("/aoie", aoieRoutes);
 
-// TRINITY CORE
+// Trinity Core
 router.use("/trinity", trinityCoreRoutes);
 
+// Ultra Master Engine
+router.use("/ultra-master", ultraMasterRoutes);
+
 export default router;
-app.use("/ultra-master", ultraMasterRoutes);
