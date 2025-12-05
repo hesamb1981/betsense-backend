@@ -1,29 +1,31 @@
-// routes.js (ROOT)
-
+// server.js
 import express from "express";
+import cors from "cors";
 
-// AOIE Engine routes
-import aoieRoutes from "./routes/aoieRoutes.js";
+// روتر اصلی که همه‌ی سرویس‌ها رو وصل می‌کند
+import router from "./rootRoutes.js";
 
-// Trinity Core routes
-import trinityCoreRoutes from "./routes/trinityCoreRoutes.js";
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-const router = express.Router();
+// Middlewareها
+app.use(cors());
+app.use(express.json());
 
-// Root test route
-router.get("/", (req, res) => {
+// استفاده از روتر اصلی
+app.use("/", router);
+
+// یک هلت چک ساده برای اطمینان
+app.get("/health", (req, res) => {
   res.json({
     ok: true,
-    status: "Backend Running",
-    services: ["AOIE_ENGINE", "TRINITY_CORE"],
+    service: "BetSense Ultra Backend",
+    message: "Health endpoint OK",
     timestamp: new Date().toISOString()
   });
 });
 
-// AOIE Engine
-router.use("/aoie", aoieRoutes);
-
-// Trinity Core
-router.use("/trinity", trinityCoreRoutes);
-
-export default router;
+// شروع سرور
+app.listen(PORT, () => {
+  console.log(`BetSense backend listening on port ${PORT}`);
+});
