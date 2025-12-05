@@ -1,75 +1,29 @@
-// server.js
 import express from "express";
-import cors from "cors";
 
-// 🔹 Existing engine routes
-import aoieRoutes from "./routes/aoieRoutes.js";
-import dataspineRoutes from "./routes/dataspineRoutes.js";
-import geniusRoutes from "./routes/geniusRoutes.js";
-import metaRoutes from "./routes/metaRoutes.js";
-import nsiRoutes from "./routes/nsiRoutes.js";
-import rbsRoutes from "./routes/rbsRoutes.js";
-
-// 🔹 Ultra Super Engines
-import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
-import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
-import ultraFusionRoutes from "./routes/super/ultraFusionRoutes.js";
-import superRiskRoutes from "./routes/superRiskRoutes.js";
-
-// 🔹 Super Intelligence Core (INTELLIGENCE_CORE v1.0)
+// Import main super-engine routes
 import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
+import ultraFusionRoutes from "./routes/super/ultraFusionRoutes.js";
 
-// 🔹 Ultra Master Core orchestrator
-import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
+// Import test routes
+import intelligenceTestRoutes from "./routes/test/intelligenceTest.js";
 
-const app = express();
-const PORT = process.env.PORT || 10000;
+const router = express.Router();
 
-// -------------------------------
-// Middlewares
-// -------------------------------
-app.use(cors());
-app.use(express.json());
-
-// -------------------------------
-// Root status
-// -------------------------------
-app.get("/", (req, res) => {
+// ROOT CHECK
+router.get("/", (req, res) => {
   res.json({
     ok: true,
-    service: "BetSense Ultra Backend",
-    message: "Backend is live and ready",
-    timestamp: new Date().toISOString(),
+    service: "BetSense Ultra Backend Router",
+    message: "Routing system online",
+    timestamp: new Date().toISOString()
   });
 });
 
-// -------------------------------
-// Attach all route modules
-// -------------------------------
+// Super Engine API Routes
+router.use("/super", intelligenceRoutes);
+router.use("/super", ultraFusionRoutes);
 
-// Base engines
-app.use(aoieRoutes);
-app.use(dataspineRoutes);
-app.use(geniusRoutes);
-app.use(metaRoutes);
-app.use(nsiRoutes);
-app.use(rbsRoutes);
+// Test Routes
+router.use("/test", intelligenceTestRoutes);
 
-// Ultra Super Cores
-app.use(ultraRiskRoutes);
-app.use(ultraMomentumRoutes);
-app.use(ultraFusionRoutes);
-app.use(superRiskRoutes);
-
-// Super Intelligence Core mounted at /super/intelligence-core
-app.use("/super/intelligence-core", intelligenceRoutes);
-
-// Ultra Master Core orchestrator
-app.use(ultraMasterRoutes);
-
-// -------------------------------
-// Start server
-// -------------------------------
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+export default router;
