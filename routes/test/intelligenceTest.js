@@ -1,12 +1,7 @@
 import express from "express";
-
 const router = express.Router();
 
-/**
- * Test endpoint for Intelligence Core
- * Final URL:
- *   https://betsense-backend.onrender.com/test/intelligence-core
- */
+// تست اصلی اینتیلیجنس کور
 router.get("/intelligence-core", (req, res) => {
   res.json({
     ok: true,
