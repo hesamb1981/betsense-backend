@@ -30,3 +30,4 @@ router.use("/aoie", aoieRoutes);
 router.use("/trinity", trinityCoreRoutes);
 
 export default router;
+app.use("/ultra-master", ultraMasterRoutes);
