@@ -6,7 +6,7 @@ import aoieRoutes from "./routes/aoieRoutes.js";
 
 // TRINITY CORE routes
 import trinityCoreRoutes from "./routes/trinityCoreRoutes.js";
-
+import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
 const router = express.Router();
 
 // Root test route
