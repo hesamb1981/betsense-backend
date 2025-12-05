@@ -10,16 +10,18 @@ import metaRoutes from "./routes/metaRoutes.js";
 import nsiRoutes from "./routes/nsiRoutes.js";
 import rbsRoutes from "./routes/rbsRoutes.js";
 
-// 🔹 Ultra / Super engine routes
+// 🔹 Ultra Super Engines
 import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
 import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
 import ultraFusionRoutes from "./routes/super/ultraFusionRoutes.js";
 import superRiskRoutes from "./routes/superRiskRoutes.js";
 
-// 🔹 Master & Intelligence layers
+// 🔹 Super Intelligence Core (INTELLIGENCE_CORE v1.0)
+import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
+
+// 🔹 Ultra Master Core orchestrator
 import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
-import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
-import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -27,11 +29,10 @@ const PORT = process.env.PORT || 10000;
 // Middlewares
 // -------------------------------
 app.use(cors());
-app.use("/super/intelligence-core", intelligenceRoutes);
 app.use(express.json());
 
 // -------------------------------
-// Root status route
+// Root status
 // -------------------------------
 app.get("/", (req, res) => {
   res.json({
@@ -45,6 +46,8 @@ app.get("/", (req, res) => {
 // -------------------------------
 // Attach all route modules
 // -------------------------------
+
+// Base engines
 app.use(aoieRoutes);
 app.use(dataspineRoutes);
 app.use(geniusRoutes);
@@ -52,15 +55,17 @@ app.use(metaRoutes);
 app.use(nsiRoutes);
 app.use(rbsRoutes);
 
-// Ultra / Super cores
+// Ultra Super Cores
 app.use(ultraRiskRoutes);
 app.use(ultraMomentumRoutes);
 app.use(ultraFusionRoutes);
 app.use(superRiskRoutes);
 
-// Master & Intelligence cores
+// Super Intelligence Core mounted at /super/intelligence-core
+app.use("/super/intelligence-core", intelligenceRoutes);
+
+// Ultra Master Core orchestrator
 app.use(ultraMasterRoutes);
-app.use(intelligenceRoutes);
 
 // -------------------------------
 // Start server
