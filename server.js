@@ -9,14 +9,17 @@ import metaRoutes from "./routes/metaRoutes.js";
 import nsiRoutes from "./routes/nsiRoutes.js";
 import rbsRoutes from "./routes/rbsRoutes.js";
 
-// 🔹 Ultra Super Engines
+// 🔹 Ultra / Super Engines
 import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
 import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
 import ultraFusionRoutes from "./routes/super/ultraFusionRoutes.js";
 import superRiskRoutes from "./routes/superRiskRoutes.js";
 
-// 🔹 NEW: ULTRA MASTER CORE orchestrator
+// 🔹 Ultra Master Core
 import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
+
+// 🔹 Intelligence Layer v1.0
+import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -45,14 +48,17 @@ app.use(metaRoutes);
 app.use(nsiRoutes);
 app.use(rbsRoutes);
 
-// Ultra Super Cores
+// Ultra / Super Cores
 app.use(ultraRiskRoutes);
 app.use(ultraMomentumRoutes);
 app.use(ultraFusionRoutes);
 app.use(superRiskRoutes);
 
-// NEW: Ultra Master Core orchestrator
+// Ultra Master Core
 app.use(ultraMasterRoutes);
+
+// Intelligence Layer
+app.use(intelligenceRoutes);
 
 // -------------------------------
 // Start server
