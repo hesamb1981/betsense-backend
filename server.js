@@ -1,10 +1,10 @@
 // server.js
-// BetSense Ultra Backend – Full Router Wiring
+// BetSense Ultra Backend – with Super & Intelligence layers
 
 import express from "express";
 import cors from "cors";
 
-// 🔹 Existing engine routes
+// 🔹 Base engine routes
 import aoieRoutes from "./routes/aoieRoutes.js";
 import dataspineRoutes from "./routes/dataspineRoutes.js";
 import geniusRoutes from "./routes/geniusRoutes.js";
@@ -12,18 +12,15 @@ import metaRoutes from "./routes/metaRoutes.js";
 import nsiRoutes from "./routes/nsiRoutes.js";
 import rbsRoutes from "./routes/rbsRoutes.js";
 
-// 🔹 Intelligence Core v1.0
-import intelligenceCoreRoutes from "./routes/intelligenceCoreRoutes.js";
-
-// 🔹 Ultra Super Engines (Risk / Momentum / Fusion / Super-Risk / Master)
+// 🔹 Ultra Super Cores
 import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
 import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
 import ultraFusionRoutes from "./routes/super/ultraFusionRoutes.js";
 import superRiskRoutes from "./routes/superRiskRoutes.js";
-import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
 
-// 🔹 Meta-Behavior Engine v1.0
-import metaBehaviorEngineRoutes from "./routes/metaBehaviorEngine.js";
+// 🔹 Orchestrators
+import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
+import intelligenceRoutes from "./routes/super/intelligenceRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -47,7 +44,7 @@ app.get("/", (req, res) => {
 });
 
 // -------------------------------
-// Attach all route modules
+// Attach base engine routes
 // -------------------------------
 app.use(aoieRoutes);
 app.use(dataspineRoutes);
@@ -55,19 +52,20 @@ app.use(geniusRoutes);
 app.use(metaRoutes);
 app.use(nsiRoutes);
 app.use(rbsRoutes);
- 
-// Intelligence Core
-app.use(intelligenceCoreRoutes);
 
-// Ultra Super Cores
+// -------------------------------
+// Attach Ultra Super Core routes
+// -------------------------------
 app.use(ultraRiskRoutes);
 app.use(ultraMomentumRoutes);
 app.use(ultraFusionRoutes);
 app.use(superRiskRoutes);
-app.use(ultraMasterRoutes);
 
-// Meta-Behavior Engine
-app.use(metaBehaviorEngineRoutes);
+// -------------------------------
+// Attach orchestrator layers
+// -------------------------------
+app.use(ultraMasterRoutes);
+app.use(intelligenceRoutes);
 
 // -------------------------------
 // Start server
