@@ -1,25 +1,33 @@
 // routes.js (ROOT)
 
-// لود کردن Express
 import express from "express";
 
-// AOIE Routes
+// AOIE Engine routes
 import aoieRoutes from "./routes/aoieRoutes.js";
-
-// تست اینتلیجنس کور (فایلش همین الان توی routes/test/intelligenceTest.js وجود دارد)
-import intelligenceTestRoutes from "./routes/test/intelligenceTest.js";
 
 const router = express.Router();
 
-// مسیر تست روت اصلی
+// Root test route
 router.get("/", (req, res) => {
-  res.json({ ok: true, status: "Backend Running" });
+  res.json({
+    ok: true,
+    status: "Backend Running",
+    services: ["AOIE_ENGINE", "TRINITY_CORE"],
+    timestamp: new Date().toISOString()
+  });
 });
 
-// اتصال AOIE Engine
+// AOIE Engine
 router.use("/aoie", aoieRoutes);
 
-// اتصال تست اینتلیجنس کور
-router.use("/test", intelligenceTestRoutes);
+// Trinity Core – simple inline test route
+router.get("/trinity/core-test", (req, res) => {
+  res.json({
+    ok: true,
+    layer: "TRINITY_CORE_TEST",
+    message: "Trinity Core inline route /trinity/core-test is working ✅",
+    timestamp: new Date().toISOString()
+  });
+});
 
 export default router;
