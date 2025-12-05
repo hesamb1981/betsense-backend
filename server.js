@@ -1,9 +1,11 @@
-// server.js
 import express from "express";
 import cors from "cors";
 
-// روتر اصلی که همه‌ی سرویس‌ها رو وصل می‌کند
-import router from "./rootRoutes.js";
+// روتر روت اصلی (AOIE و غیره)
+import rootRouter from "./rootRoutes.js";
+
+// روتر مستقیم Trinity Core
+import trinityCoreRoutes from "./routes/trinityCoreRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -12,15 +14,18 @@ const PORT = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json());
 
-// استفاده از روتر اصلی
-app.use("/", router);
+// روت اصلی
+app.use("/", rootRouter);
 
-// یک هلت چک ساده برای اطمینان
+// اتصال مستقیم Trinity Core
+app.use("/trinity", trinityCoreRoutes);
+
+// یک هلت‌چک کلی برای بکیند
 app.get("/health", (req, res) => {
   res.json({
     ok: true,
     service: "BetSense Ultra Backend",
-    message: "Health endpoint OK",
+    message: "Global health endpoint OK",
     timestamp: new Date().toISOString()
   });
 });
