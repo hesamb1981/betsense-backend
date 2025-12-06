@@ -15,8 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 // ----------------- MAIN ROUTER -----------------
-// تمام روت‌ها (aoie, dataspine, trinity-core, ultra-risk, ultra-momentum, ultra-master, memory و غیره)
-// از طریق rootRoutes.js مدیریت می‌شوند
+// تمام روت‌ها (aoie, dataspine, trinity-core, ultra-risk, ultra-momentum,
+// ultra-master, memory و غیره) از طریق rootRoutes.js مدیریت می‌شوند
 app.use("/", router);
 
 // ----------------- HEALTH CHECK -----------------
