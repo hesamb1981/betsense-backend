@@ -1,36 +1,35 @@
+// server.js
+// BetSense Ultra Backend – using rootRoutes.js as the main router
+
 import express from "express";
 import cors from "cors";
 
-// روتر روت اصلی (AOIE و غیره)
-import rootRouter from "./rootRoutes.js";
-
-// روتر مستقیم Trinity Core
-import trinityCoreRoutes from "./routes/trinityCoreRoutes.js";
+// روت اصلی که تمام انجین‌ها و لایه‌ها را مدیریت می‌کند
+import router from "./rootRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middlewareها
+// ----------------- MIDDLEWARES -----------------
 app.use(cors());
 app.use(express.json());
 
-// روت اصلی
-app.use("/", rootRouter);
+// ----------------- MAIN ROUTER -----------------
+// تمام روت‌ها (aoie, dataspine, trinity-core, ultra-risk, ultra-momentum, ultra-master, memory و غیره)
+// از طریق rootRoutes.js مدیریت می‌شوند
+app.use("/", router);
 
-// اتصال مستقیم Trinity Core
-app.use("/trinity", trinityCoreRoutes);
-
-// یک هلت‌چک کلی برای بکیند
+// ----------------- HEALTH CHECK -----------------
 app.get("/health", (req, res) => {
   res.json({
     ok: true,
     service: "BetSense Ultra Backend",
-    message: "Global health endpoint OK",
+    message: "Health endpoint OK",
     timestamp: new Date().toISOString()
   });
 });
 
-// شروع سرور
+// ----------------- START SERVER -----------------
 app.listen(PORT, () => {
   console.log(`BetSense backend listening on port ${PORT}`);
 });
