@@ -1,3 +1,5 @@
+// rootRoutes.js
+
 import express from "express";
 
 // -------- MAIN ENGINE ROUTES --------
@@ -16,11 +18,12 @@ import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
 // -------- INTERNAL / SUPER LAYERS --------
 import trinityMemoryRoutes from "./routes/super/trinityMemoryRoutes.js";
 
-// -------- NEW: ENGINE HEALTH ROUTES --------
+// -------- ENGINE HEALTH ROUTES --------
 import engineHealthRoutes from "./routes/engineHealthRoutes.js";
-import ultraSimulationRoutes from "./routes/super/ultraSimulationRoutes.js";
 
-import selfCorrectionRoutes from "./routes/super/selfCorrectionRoutes.js";
+// -------- TRINITY INTEGRITY LAYER ROUTES --------
+import ultraIntegrityRoutes from "./routes/super/ultraIntegrityRoutes.js";
+
 const router = express.Router();
 
 // ----------------- ROOT HEALTH CHECK -----------------
@@ -48,10 +51,11 @@ router.use("/trinity-core", trinityCoreRoutes);
 router.use("/ultra-master", ultraMasterRoutes);
 router.use("/ultra-momentum", ultraMomentumRoutes);
 router.use("/ultra-risk", ultraRiskRoutes);
-router.use("/super/self-correction", selfCorrectionRoutes);
 
 // ----------------- TRINITY MEMORY LAYER -----------------
 router.use("/trinity-core/memory", trinityMemoryRoutes);
-router.use("/super/simulation", ultraSimulationRoutes);
+
+// ----------------- TRINITY INTEGRITY LAYER -----------------
+router.use("/super/integrity", ultraIntegrityRoutes);
 
 export default router;
