@@ -18,6 +18,7 @@ import trinityMemoryRoutes from "./routes/super/trinityMemoryRoutes.js";
 
 // -------- NEW: ENGINE HEALTH ROUTES --------
 import engineHealthRoutes from "./routes/engineHealthRoutes.js";
+import ultraSimulationRoutes from "./routes/super/ultraSimulationRoutes.js";
 
 import selfCorrectionRoutes from "./routes/super/selfCorrectionRoutes.js";
 const router = express.Router();
@@ -51,5 +52,6 @@ router.use("/super/self-correction", selfCorrectionRoutes);
 
 // ----------------- TRINITY MEMORY LAYER -----------------
 router.use("/trinity-core/memory", trinityMemoryRoutes);
+router.use("/super/simulation", ultraSimulationRoutes);
 
 export default router;
