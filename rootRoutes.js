@@ -2,7 +2,6 @@
 
 import express from "express";
 
-// -------- MAIN ENGINE ROUTES --------
 import aoieRoutes from "./routes/aoieRoutes.js";
 import dataspineRoutes from "./routes/dataspineRoutes.js";
 import geniusRoutes from "./routes/geniusRoutes.js";
@@ -15,13 +14,9 @@ import ultraMasterRoutes from "./routes/ultraMasterRoutes.js";
 import ultraMomentumRoutes from "./routes/ultraMomentumRoutes.js";
 import ultraRiskRoutes from "./routes/ultraRiskRoutes.js";
 
-// -------- INTERNAL / SUPER LAYERS --------
+// --- SUPER / INTERNAL LAYERS ---
 import trinityMemoryRoutes from "./routes/super/trinityMemoryRoutes.js";
-
-// -------- ENGINE HEALTH ROUTES --------
-import engineHealthRoutes from "./routes/engineHealthRoutes.js";
-
-// -------- TRINITY INTEGRITY LAYER ROUTES --------
+import engineHealthRoutes from "./routes/super/engineHealthRoutes.js";
 import ultraIntegrityRoutes from "./routes/super/ultraIntegrityRoutes.js";
 
 const router = express.Router();
@@ -36,9 +31,6 @@ router.get("/", (req, res) => {
   });
 });
 
-// ----------------- ENGINE HEALTH MONITOR -----------------
-router.use("/health", engineHealthRoutes);
-
 // ----------------- MAIN ENGINES -----------------
 router.use("/aoie", aoieRoutes);
 router.use("/dataspine", dataspineRoutes);
@@ -52,10 +44,9 @@ router.use("/ultra-master", ultraMasterRoutes);
 router.use("/ultra-momentum", ultraMomentumRoutes);
 router.use("/ultra-risk", ultraRiskRoutes);
 
-// ----------------- TRINITY MEMORY LAYER -----------------
+// ----------------- SUPER / INTERNAL LAYERS -----------------
 router.use("/trinity-core/memory", trinityMemoryRoutes);
-
-// ----------------- TRINITY INTEGRITY LAYER -----------------
+router.use("/super/engines", engineHealthRoutes);
 router.use("/super/integrity", ultraIntegrityRoutes);
 
 export default router;
